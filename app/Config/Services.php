@@ -1,32 +1,54 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Config;
 
+use App\Models\DewanParokiBidangModel;
+use App\Models\HeroSlideModel;
+use App\Models\JadwalMisaModel;
+use App\Models\SakramenJenisModel;
+use App\Services\DewanParokiBidangService;
+use App\Services\HeroSlideService;
+use App\Services\JadwalMisaService;
+use App\Services\SakramenJenisService;
 use CodeIgniter\Config\BaseService;
 
-/**
- * Services Configuration file.
- *
- * Services are simply other classes/libraries that the system uses
- * to do its job. This is used by CodeIgniter to allow the core of the
- * framework to be swapped out easily without affecting the usage within
- * the rest of your application.
- *
- * This file holds any application-specific services, or service overrides
- * that you might need. An example has been included with the general
- * method format you should use for your service methods. For more examples,
- * see the core Services file at system/Config/Services.php.
- */
 class Services extends BaseService
 {
-    /*
-     * public static function example($getShared = true)
-     * {
-     *     if ($getShared) {
-     *         return static::getSharedInstance('example');
-     *     }
-     *
-     *     return new \CodeIgniter\Example();
-     * }
-     */
+    public static function heroSlideService(bool $getShared = true): HeroSlideService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('heroSlideService');
+        }
+
+        return new HeroSlideService(new HeroSlideModel());
+    }
+
+    public static function dewanParokiBidangService(bool $getShared = true): DewanParokiBidangService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('dewanParokiBidangService');
+        }
+
+        return new DewanParokiBidangService(new DewanParokiBidangModel());
+    }
+
+    public static function sakramenJenisService(bool $getShared = true): SakramenJenisService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('sakramenJenisService');
+        }
+
+        return new SakramenJenisService(new SakramenJenisModel());
+    }
+
+    public static function jadwalMisaService(bool $getShared = true): JadwalMisaService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('jadwalMisaService');
+        }
+
+        return new JadwalMisaService(new JadwalMisaModel());
+    }
 }
