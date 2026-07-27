@@ -160,12 +160,8 @@ final class WilayahServiceTest extends CIUnitTestCase
         ]);
 
         $repository = $this->createStub(WilayahRepository::class);
-        $repository->method('getWithLingkungan')->willReturn(
-            new \App\DTOs\Wilayah\WilayahWithLingkunganDto(
-                wilayah: $wilayah,
-                lingkungan: [],
-            ),
-        );
+        $repository->method('findForDetail')->willReturn($wilayah);
+        $repository->method('findLingkunganForWilayah')->willReturn([]);
 
         $service = new WilayahService($repository, $this->piiCipher);
         $detail  = $service->getDetail(1);
@@ -186,7 +182,7 @@ final class WilayahServiceTest extends CIUnitTestCase
         ]);
 
         $lingkunganRepository = $this->createStub(LingkunganRepository::class);
-        $lingkunganRepository->method('find')->willReturn($lingkungan);
+        $lingkunganRepository->method('findByIdForDetail')->willReturn($lingkungan);
 
         $service = new LingkunganService(
             $lingkunganRepository,

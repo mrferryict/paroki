@@ -86,6 +86,24 @@ class ArtikelService
         return (int) $id;
     }
 
+    public function buildAdminDto(
+        string $judul,
+        ArtikelKategori $kategori,
+        ?string $konten,
+        PublishStatus $status,
+        ?string $tanggalTerbitRaw,
+        ?int $excludeId = null,
+    ): ArtikelDto {
+        return new ArtikelDto(
+            judul: $judul,
+            slug: $this->generateUniqueSlug($judul, $excludeId),
+            kategori: $kategori,
+            konten: $konten,
+            status: $status,
+            tanggalTerbit: $this->resolveTanggalTerbit($status, $tanggalTerbitRaw),
+        );
+    }
+
     public function update(int $id, ArtikelDto $dto): void
     {
         if ($this->artikelRepository->find($id) === null) {

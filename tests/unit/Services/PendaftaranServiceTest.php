@@ -62,4 +62,32 @@ final class PendaftaranServiceTest extends CIUnitTestCase
         $this->assertStringNotContainsString($plaintext, (string) $captured['whatsapp_cipher']);
         $this->assertSame($plaintext, $this->piiCipher->decrypt((string) $captured['whatsapp_cipher']));
     }
+
+    public function testGetAllowedNextStatusesFromBaru(): void
+    {
+        $service = new PendaftaranService(
+            $this->createStub(PendaftaranRepository::class),
+            $this->piiCipher,
+            new \App\Models\SakramenJenisModel(),
+        );
+
+        $allowed = $service->getAllowedNextStatuses(\App\Enums\PendaftaranStatus::Baru);
+
+        $this->assertCount(2, $allowed);
+        $this->assertSame(
+            [\App\Enums\PendaftaranStatus::Diproses, \App\Enums\PendaftaranStatus::Ditolak],
+            $allowed,
+        );
+    }
+
+    public function testGetAllowedNextStatusesFromSelesaiIsEmpty(): void
+    {
+        $service = new PendaftaranService(
+            $this->createStub(PendaftaranRepository::class),
+            $this->piiCipher,
+            new \App\Models\SakramenJenisModel(),
+        );
+
+        $this->assertSame([], $service->getAllowedNextStatuses(\App\Enums\PendaftaranStatus::Selesai));
+    }
 }

@@ -35,25 +35,40 @@ class WilayahRepository extends BaseRepository
      */
     public function getWithLingkungan(int $wilayahId): ?WilayahWithLingkunganDto
     {
-        $wilayah = $this->model->find($wilayahId);
+        /** @var Wilayah|null $wilayah */
+        $wilayah = $this->model
+            ->select('id, nama, ketua_nama, created_at, updated_at')
+            ->find($wilayahId);
 
         if ($wilayah === null) {
             return null;
         }
 
+        return new WilayahWithLingkunganDto(
+            wilayah: $wilayah,
+            lingkungan: $this->findLingkunganForWilayah($wilayahId),
+        );
+    }
+
+    public function findForDetail(int $id): ?Wilayah
+    {
+        /** @var Wilayah|null */
+        return $this->model->find($id);
+    }
+
+    /**
+     * @return list<Lingkungan>
+     */
+    public function findLingkunganForWilayah(int $wilayahId): array
+    {
         $lingkunganModel = model(LingkunganModel::class);
 
-        /** @var list<Lingkungan> $lingkungan */
-        $lingkungan = $lingkunganModel
+        /** @var list<Lingkungan> */
+        return $lingkunganModel
             ->select('id, wilayah_id, nama, ketua_nama, created_at, updated_at')
             ->where('wilayah_id', $wilayahId)
             ->orderBy('nama', 'ASC')
             ->findAll();
-
-        return new WilayahWithLingkunganDto(
-            wilayah: $wilayah,
-            lingkungan: $lingkungan,
-        );
     }
 
     /**

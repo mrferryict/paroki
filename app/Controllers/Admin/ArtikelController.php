@@ -184,16 +184,13 @@ class ArtikelController extends BaseController
         $kategori = ArtikelKategori::from((string) $this->request->getPost('kategori'));
         $konten   = trim((string) $this->request->getPost('konten'));
 
-        return new ArtikelDto(
+        return $this->artikelService->buildAdminDto(
             judul: $judul,
-            slug: $this->artikelService->generateUniqueSlug($judul, $excludeId),
             kategori: $kategori,
             konten: $konten !== '' ? $konten : null,
             status: $status,
-            tanggalTerbit: $this->artikelService->resolveTanggalTerbit(
-                $status,
-                $this->nullablePost('tanggal_terbit'),
-            ),
+            tanggalTerbitRaw: $this->nullablePost('tanggal_terbit'),
+            excludeId: $excludeId,
         );
     }
 

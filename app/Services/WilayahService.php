@@ -31,22 +31,22 @@ class WilayahService
 
     public function getDetail(int $id): WilayahDetailDto
     {
-        $withLingkungan = $this->wilayahRepository->getWithLingkungan($id);
+        $wilayah = $this->wilayahRepository->findForDetail($id);
 
-        if ($withLingkungan === null) {
+        if ($wilayah === null) {
             throw new DomainException('Wilayah tidak ditemukan.');
         }
 
-        $kontak = $this->piiCipher->decrypt((string) $withLingkungan->wilayah->ketua_kontak_cipher);
+        $kontak = $this->piiCipher->decrypt((string) $wilayah->ketua_kontak_cipher);
 
         if ($kontak === null || $kontak === '') {
             throw new RuntimeException('Kontak ketua wilayah tidak dapat didekripsi.');
         }
 
         return new WilayahDetailDto(
-            wilayah: $withLingkungan->wilayah,
+            wilayah: $wilayah,
             ketuaKontak: $kontak,
-            lingkungan: $withLingkungan->lingkungan,
+            lingkungan: $this->wilayahRepository->findLingkunganForWilayah($id),
         );
     }
 

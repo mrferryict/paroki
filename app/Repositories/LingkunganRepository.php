@@ -26,4 +26,10 @@ class LingkunganRepository extends BaseRepository
             ->orderBy('nama', 'ASC')
             ->findAll();
     }
+
+    public function findByIdForDetail(int $id): ?Lingkungan
+    {
+        /** @var Lingkungan|null */
+        return $this->model->find($id);
+    }
 }

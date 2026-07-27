@@ -116,6 +116,19 @@ class PendaftaranService
         }
     }
 
+    /**
+     * @return list<PendaftaranStatus>
+     */
+    public function getAllowedNextStatuses(PendaftaranStatus $current): array
+    {
+        return match ($current) {
+            PendaftaranStatus::Baru     => [PendaftaranStatus::Diproses, PendaftaranStatus::Ditolak],
+            PendaftaranStatus::Diproses => [PendaftaranStatus::Selesai, PendaftaranStatus::Ditolak],
+            PendaftaranStatus::Selesai,
+            PendaftaranStatus::Ditolak  => [],
+        };
+    }
+
     private function assertValidSakramenJenisId(?int $sakramenJenisId): void
     {
         if ($sakramenJenisId === null) {
@@ -133,12 +146,7 @@ class PendaftaranService
             return;
         }
 
-        $allowed = match ($from) {
-            PendaftaranStatus::Baru     => [PendaftaranStatus::Diproses, PendaftaranStatus::Ditolak],
-            PendaftaranStatus::Diproses => [PendaftaranStatus::Selesai, PendaftaranStatus::Ditolak],
-            PendaftaranStatus::Selesai,
-            PendaftaranStatus::Ditolak  => [],
-        };
+        $allowed = $this->getAllowedNextStatuses($from);
 
         if (! in_array($to, $allowed, true)) {
             throw new DomainException(

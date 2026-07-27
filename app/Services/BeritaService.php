@@ -98,6 +98,50 @@ class BeritaService
         return (int) $id;
     }
 
+    public function buildAdminDto(
+        string $judul,
+        BeritaKategori $kategori,
+        ?string $ringkasan,
+        ?string $konten,
+        PublishStatus $status,
+        ?string $tanggalTerbitRaw,
+        ?string $gambarUtama,
+        ?int $excludeId = null,
+    ): BeritaDto {
+        return new BeritaDto(
+            judul: $judul,
+            slug: $this->generateUniqueSlug($judul, $excludeId),
+            kategori: $kategori,
+            ringkasan: $ringkasan,
+            konten: $konten,
+            gambarUtama: $gambarUtama,
+            status: $status,
+            tanggalTerbit: $this->resolveTanggalTerbit($status, $tanggalTerbitRaw),
+        );
+    }
+
+    public function resolveUploadedImage(?UploadedFile $file, bool $required): ?string
+    {
+        if ($file === null || ! $file->isValid() || $file->hasMoved()) {
+            if ($required) {
+                throw new InvalidArgumentException('Gambar utama wajib diunggah.');
+            }
+
+            return null;
+        }
+
+        return $this->storeUploadedImage($file);
+    }
+
+    public function resolveUploadedImageForUpdate(?UploadedFile $file, string $existingPath): string
+    {
+        if ($file !== null && $file->isValid() && ! $file->hasMoved()) {
+            return $this->storeUploadedImage($file);
+        }
+
+        return $existingPath;
+    }
+
     public function update(int $id, BeritaDto $dto): void
     {
         $existing = $this->findById($id);

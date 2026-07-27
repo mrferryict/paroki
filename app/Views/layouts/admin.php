@@ -54,7 +54,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-3 text-sm">
-                <?php if (auth()->loggedIn()): ?>
+                <?php if (ENVIRONMENT !== 'testing' && auth()->loggedIn()): ?>
                     <span class="hidden text-ivory/80 sm:inline"><?= esc(auth()->user()->username ?? auth()->user()->email ?? 'Admin') ?></span>
                 <?php endif ?>
                 <a href="<?= site_url('/') ?>" class="rounded px-2 py-1 hover:bg-gold/10 hover:text-gold">Lihat Situs</a>

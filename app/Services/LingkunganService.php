@@ -31,9 +31,17 @@ class LingkunganService
         return $this->lingkunganRepository->findAllByWilayahIdForList($wilayahId);
     }
 
+    public function getDetailForWilayah(int $wilayahId, int $id): LingkunganDetailDto
+    {
+        $detail = $this->getDetail($id);
+        $this->assertBelongsToWilayah(wilayahId: $wilayahId, lingkungan: $detail->lingkungan);
+
+        return $detail;
+    }
+
     public function getDetail(int $id): LingkunganDetailDto
     {
-        $lingkungan = $this->lingkunganRepository->find($id);
+        $lingkungan = $this->lingkunganRepository->findByIdForDetail($id);
 
         if ($lingkungan === null) {
             throw new DomainException('Lingkungan tidak ditemukan.');
@@ -75,7 +83,7 @@ class LingkunganService
 
     public function update(int $id, LingkunganDto $dto): void
     {
-        $existing = $this->lingkunganRepository->find($id);
+        $existing = $this->lingkunganRepository->findByIdForDetail($id);
 
         if ($existing === null) {
             throw new DomainException('Lingkungan tidak ditemukan.');
@@ -101,14 +109,45 @@ class LingkunganService
         }
     }
 
+    public function updateForWilayah(int $wilayahId, int $id, LingkunganDto $dto): void
+    {
+        $existing = $this->lingkunganRepository->findByIdForDetail($id);
+
+        if ($existing === null) {
+            throw new DomainException('Lingkungan tidak ditemukan.');
+        }
+
+        $this->assertBelongsToWilayah(wilayahId: $wilayahId, lingkungan: $existing);
+        $this->update($id, $dto);
+    }
+
     public function delete(int $id): void
     {
-        if ($this->lingkunganRepository->find($id) === null) {
+        if ($this->lingkunganRepository->findByIdForDetail($id) === null) {
             throw new DomainException('Lingkungan tidak ditemukan.');
         }
 
         if (! $this->lingkunganRepository->delete($id)) {
             throw new RuntimeException('Gagal menghapus lingkungan.');
+        }
+    }
+
+    public function deleteForWilayah(int $wilayahId, int $id): void
+    {
+        $existing = $this->lingkunganRepository->findByIdForDetail($id);
+
+        if ($existing === null) {
+            throw new DomainException('Lingkungan tidak ditemukan.');
+        }
+
+        $this->assertBelongsToWilayah(wilayahId: $wilayahId, lingkungan: $existing);
+        $this->delete($id);
+    }
+
+    private function assertBelongsToWilayah(int $wilayahId, Lingkungan $lingkungan): void
+    {
+        if ((int) $lingkungan->wilayah_id !== $wilayahId) {
+            throw new DomainException('Lingkungan tidak ditemukan di wilayah ini.');
         }
     }
 

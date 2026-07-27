@@ -60,7 +60,11 @@ class PendaftaranController extends BaseController
             'detail'              => $detail,
             'title'               => 'Detail Pendaftaran',
             'statusOptions'       => $this->pendaftaranService->statusOptions(),
-            'allowedNextStatuses' => $this->allowedNextStatuses($detail->pendaftaran->status),
+            'allowedNextStatuses' => $this->pendaftaranService->getAllowedNextStatuses(
+                $detail->pendaftaran->status instanceof PendaftaranStatus
+                    ? $detail->pendaftaran->status
+                    : PendaftaranStatus::from((string) $detail->pendaftaran->status),
+            ),
         ]);
     }
 
@@ -102,22 +106,5 @@ class PendaftaranController extends BaseController
         $value = trim((string) $this->request->getGet($field));
 
         return $value !== '' ? $value : null;
-    }
-
-    /**
-     * @return list<PendaftaranStatus>
-     */
-    private function allowedNextStatuses(PendaftaranStatus|string $current): array
-    {
-        $current = $current instanceof PendaftaranStatus
-            ? $current
-            : PendaftaranStatus::from((string) $current);
-
-        return match ($current) {
-            PendaftaranStatus::Baru     => [PendaftaranStatus::Diproses, PendaftaranStatus::Ditolak],
-            PendaftaranStatus::Diproses => [PendaftaranStatus::Selesai, PendaftaranStatus::Ditolak],
-            PendaftaranStatus::Selesai,
-            PendaftaranStatus::Ditolak  => [],
-        };
     }
 }

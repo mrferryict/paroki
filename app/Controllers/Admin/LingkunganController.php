@@ -57,17 +57,11 @@ class LingkunganController extends BaseController
     public function show(int $wilayahId, int $id): string
     {
         try {
-            $detail = $this->lingkunganService->getDetail($id);
+            $detail  = $this->lingkunganService->getDetailForWilayah(wilayahId: $wilayahId, id: $id);
             $wilayah = $this->wilayahService->getWithLingkungan($wilayahId)->wilayah;
         } catch (DomainException | RuntimeException) {
             return view('admin/lingkungan/partials/detail_error', [
                 'message' => 'Lingkungan tidak ditemukan.',
-            ]);
-        }
-
-        if ((int) $detail->lingkungan->wilayah_id !== $wilayahId) {
-            return view('admin/lingkungan/partials/detail_error', [
-                'message' => 'Lingkungan tidak ditemukan di wilayah ini.',
             ]);
         }
 
@@ -113,14 +107,10 @@ class LingkunganController extends BaseController
     public function edit(int $wilayahId, int $id): string
     {
         try {
-            $detail  = $this->lingkunganService->getDetail($id);
+            $detail  = $this->lingkunganService->getDetailForWilayah(wilayahId: $wilayahId, id: $id);
             $wilayah = $this->wilayahService->getWithLingkungan($wilayahId)->wilayah;
         } catch (DomainException) {
             return $this->formErrorResponse('Lingkungan tidak ditemukan.');
-        }
-
-        if ((int) $detail->lingkungan->wilayah_id !== $wilayahId) {
-            return $this->formErrorResponse('Lingkungan tidak ditemukan di wilayah ini.');
         }
 
         return view('admin/lingkungan/partials/form', [
@@ -137,7 +127,11 @@ class LingkunganController extends BaseController
         }
 
         try {
-            $this->lingkunganService->update($id, $this->buildDtoFromRequest(wilayahId: $wilayahId));
+            $this->lingkunganService->updateForWilayah(
+                wilayahId: $wilayahId,
+                id: $id,
+                dto: $this->buildDtoFromRequest(wilayahId: $wilayahId),
+            );
 
             session()->setFlashdata('success', 'Lingkungan berhasil diperbarui.');
 
@@ -150,13 +144,7 @@ class LingkunganController extends BaseController
     public function delete(int $wilayahId, int $id): ResponseInterface|string
     {
         try {
-            $detail = $this->lingkunganService->getDetail($id);
-
-            if ((int) $detail->lingkungan->wilayah_id !== $wilayahId) {
-                throw new DomainException('Lingkungan tidak ditemukan di wilayah ini.');
-            }
-
-            $this->lingkunganService->delete($id);
+            $this->lingkunganService->deleteForWilayah(wilayahId: $wilayahId, id: $id);
 
             session()->setFlashdata('success', 'Lingkungan berhasil dihapus.');
 

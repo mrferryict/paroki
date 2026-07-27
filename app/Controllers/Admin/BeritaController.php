@@ -66,8 +66,11 @@ class BeritaController extends BaseController
         }
 
         try {
-            $gambar = $this->resolveUploadedImage(required: true);
-            $dto    = $this->buildDtoFromRequest(gambarUtama: $gambar);
+            $gambar = $this->beritaService->resolveUploadedImage(
+                $this->request->getFile('gambar_utama'),
+                required: true,
+            );
+            $dto = $this->buildDtoFromRequest(gambarUtama: $gambar);
 
             $this->beritaService->create($dto);
 
@@ -103,13 +106,10 @@ class BeritaController extends BaseController
 
         try {
             $existing = $this->beritaService->findById($id);
-            $gambar   = (string) ($existing->gambar_utama ?? '');
-
-            $uploaded = $this->request->getFile('gambar_utama');
-
-            if ($uploaded !== null && $uploaded->isValid() && ! $uploaded->hasMoved()) {
-                $gambar = $this->beritaService->storeUploadedImage($uploaded);
-            }
+            $gambar   = $this->beritaService->resolveUploadedImageForUpdate(
+                $this->request->getFile('gambar_utama'),
+                (string) ($existing->gambar_utama ?? ''),
+            );
 
             $dto = $this->buildDtoFromRequest(
                 gambarUtama: $gambar !== '' ? $gambar : null,
@@ -195,34 +195,16 @@ class BeritaController extends BaseController
         $ringkasan = trim((string) $this->request->getPost('ringkasan'));
         $konten    = trim((string) $this->request->getPost('konten'));
 
-        return new BeritaDto(
+        return $this->beritaService->buildAdminDto(
             judul: $judul,
-            slug: $this->beritaService->generateUniqueSlug($judul, $excludeId),
             kategori: $kategori,
             ringkasan: $ringkasan !== '' ? $ringkasan : null,
             konten: $konten !== '' ? $konten : null,
-            gambarUtama: $gambarUtama,
             status: $status,
-            tanggalTerbit: $this->beritaService->resolveTanggalTerbit(
-                $status,
-                $this->nullablePost('tanggal_terbit'),
-            ),
+            tanggalTerbitRaw: $this->nullablePost('tanggal_terbit'),
+            gambarUtama: $gambarUtama,
+            excludeId: $excludeId,
         );
-    }
-
-    private function resolveUploadedImage(bool $required): ?string
-    {
-        $file = $this->request->getFile('gambar_utama');
-
-        if ($file === null || ! $file->isValid()) {
-            if ($required) {
-                throw new InvalidArgumentException('Gambar utama wajib diunggah.');
-            }
-
-            return null;
-        }
-
-        return $this->beritaService->storeUploadedImage($file);
     }
 
     private function nullableGet(string $field): ?string
