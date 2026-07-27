@@ -14,11 +14,13 @@ use App\Models\GaleriModel;
 use App\Models\HeroSlideModel;
 use App\Models\JadwalMisaModel;
 use App\Models\LingkunganModel;
+use App\Models\PendaftaranModel;
 use App\Models\SakramenJenisModel;
 use App\Models\WilayahModel;
 use App\Repositories\ArtikelRepository;
 use App\Repositories\BeritaRepository;
 use App\Repositories\LingkunganRepository;
+use App\Repositories\PendaftaranRepository;
 use App\Repositories\WilayahRepository;
 use App\Services\ArtikelService;
 use App\Services\BeritaService;
@@ -28,6 +30,7 @@ use App\Services\GaleriService;
 use App\Services\HeroSlideService;
 use App\Services\JadwalMisaService;
 use App\Services\LingkunganService;
+use App\Services\PendaftaranService;
 use App\Services\SakramenJenisService;
 use App\Services\WilayahService;
 use CodeIgniter\Config\BaseService;
@@ -153,5 +156,18 @@ class Services extends BaseService
         }
 
         return new DokumenService(new DokumenModel());
+    }
+
+    public static function pendaftaranService(bool $getShared = true): PendaftaranService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('pendaftaranService');
+        }
+
+        return new PendaftaranService(
+            new PendaftaranRepository(new PendaftaranModel()),
+            static::piiCipher(false),
+            new SakramenJenisModel(),
+        );
     }
 }

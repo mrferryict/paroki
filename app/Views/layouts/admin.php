@@ -89,6 +89,10 @@
                    class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/dokumen') ? 'bg-maroon/10 text-maroon' : '' ?>">
                     Dokumen
                 </a>
+                <a href="<?= site_url('admin/pendaftaran') ?>"
+                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/pendaftaran') ? 'bg-maroon/10 text-maroon' : '' ?>">
+                    Pendaftaran
+                </a>
             </nav>
         </aside>
 

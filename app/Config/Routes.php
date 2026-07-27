@@ -10,6 +10,9 @@ $routes->get('/', 'Home::index');
 // Unduhan dokumen terkontrol — CONTEXT.md §5 / §4.8
 $routes->get('dokumen/(:num)/unduh', 'DokumenController::download/$1', ['as' => 'dokumen.download']);
 
+// Formulir publik — HTMX partial response (CONTEXT.md §5 / §4.5)
+$routes->post('formulir', 'FormulirController::submit', ['as' => 'formulir.submit']);
+
 // Logout outside the session filter — CSRF-exempt (see Config\Filters).
 // .cursorrules §4.3 / CONTEXT.md §3
 $routes->match(['GET', 'POST'], 'logout', 'ProfileController::logout');
@@ -104,4 +107,8 @@ $routes->group('admin', ['filter' => ['session', 'group:admin']], static functio
     $routes->get('dokumen/(:num)/edit', 'Admin\DokumenController::edit/$1', ['as' => 'admin.dokumen.edit']);
     $routes->post('dokumen/(:num)', 'Admin\DokumenController::update/$1', ['as' => 'admin.dokumen.update']);
     $routes->post('dokumen/(:num)/delete', 'Admin\DokumenController::delete/$1', ['as' => 'admin.dokumen.delete']);
+
+    $routes->get('pendaftaran', 'Admin\PendaftaranController::index', ['as' => 'admin.pendaftaran.index']);
+    $routes->get('pendaftaran/(:num)', 'Admin\PendaftaranController::show/$1', ['as' => 'admin.pendaftaran.show']);
+    $routes->post('pendaftaran/(:num)/status', 'Admin\PendaftaranController::updateStatus/$1', ['as' => 'admin.pendaftaran.update-status']);
 });

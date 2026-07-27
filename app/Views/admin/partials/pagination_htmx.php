@@ -1,11 +1,14 @@
-<?php /** @var \App\DTOs\Shared\PaginatedResultDto $result */ ?>
-<?php /** @var \App\DTOs\Shared\ContentListFilterDto $filter */ ?>
+<?php /** @var object $result — must expose ->pager */ ?>
+<?php /** @var \App\DTOs\Shared\ContentListFilterDto|null $filter */ ?>
+<?php /** @var array<string, mixed>|null $queryParams */ ?>
 <?php /** @var string $listUrl */ ?>
 <?php
-$query = array_filter([
-    'kategori' => $filter->kategori,
-    'status'   => $filter->status,
-], static fn ($v) => $v !== null && $v !== '');
+$query = isset($queryParams)
+    ? array_filter($queryParams, static fn ($v) => $v !== null && $v !== '')
+    : array_filter([
+        'kategori' => $filter->kategori ?? null,
+        'status'   => $filter->status ?? null,
+    ], static fn ($v) => $v !== null && $v !== '');
 
 $buildPageUrl = static function (int $page) use ($listUrl, $query): string {
     return $listUrl . '?' . http_build_query(array_merge($query, ['page' => $page]));
