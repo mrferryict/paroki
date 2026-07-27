@@ -33,68 +33,52 @@
             event.detail.headers['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').content;
         });
     </script>
+    <style>[x-cloak] { display: none !important; }</style>
+    <?= $this->renderSection('head') ?>
 </head>
-<body class="min-h-screen bg-ivory font-sans text-stone-800">
-    <header class="border-b border-gold/30 bg-maroon text-ivory">
-        <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-            <div>
-                <p class="font-display text-2xl font-semibold">Panel Admin Paroki</p>
-                <p class="text-sm text-ivory/80">Paroki Hati Kudus Yesus</p>
+<body class="min-h-screen bg-ivory font-sans text-stone-800" x-data="{ sidebarOpen: false }" x-cloak>
+    <header class="sticky top-0 z-40 border-b border-gold/30 bg-maroon text-ivory">
+        <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-6">
+            <div class="flex items-center gap-3">
+                <button type="button"
+                        class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gold/10 lg:hidden"
+                        @click="sidebarOpen = !sidebarOpen"
+                        :aria-expanded="sidebarOpen"
+                        aria-label="Menu navigasi">
+                    <svg x-show="!sidebarOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <svg x-show="sidebarOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+                <div>
+                    <p class="font-display text-xl font-semibold sm:text-2xl">Panel Admin Paroki</p>
+                    <p class="text-xs text-ivory/80 sm:text-sm">Paroki Hati Kudus Yesus</p>
+                </div>
             </div>
-            <div class="flex items-center gap-4 text-sm">
-                <a href="<?= site_url('/') ?>" class="hover:text-gold">Lihat Situs</a>
+            <div class="flex items-center gap-3 text-sm">
+                <?php if (auth()->loggedIn()): ?>
+                    <span class="hidden text-ivory/80 sm:inline"><?= esc(auth()->user()->username ?? auth()->user()->email ?? 'Admin') ?></span>
+                <?php endif ?>
+                <a href="<?= site_url('/') ?>" class="rounded px-2 py-1 hover:bg-gold/10 hover:text-gold">Lihat Situs</a>
                 <a href="<?= site_url('logout') ?>" class="rounded bg-gold/20 px-3 py-1.5 hover:bg-gold/30">Keluar</a>
             </div>
         </div>
     </header>
 
-    <div class="mx-auto flex max-w-6xl gap-6 px-4 py-6">
-        <aside class="w-56 shrink-0">
-            <nav class="rounded-lg border border-gold/20 bg-white p-3 shadow-sm">
-                <p class="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-stone-500">Konten</p>
-                <?php $uri = uri_string(); ?>
-                <a href="<?= site_url('admin/hero-slide') ?>"
-                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= $uri === 'admin/hero-slide' ? 'bg-maroon/10 text-maroon' : '' ?>">
-                    Hero Slide
-                </a>
-                <a href="<?= site_url('admin/dewan-paroki') ?>"
-                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/dewan-paroki') ? 'bg-maroon/10 text-maroon' : '' ?>">
-                    Dewan Paroki (DPH)
-                </a>
-                <a href="<?= site_url('admin/sakramen-jenis') ?>"
-                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/sakramen-jenis') ? 'bg-maroon/10 text-maroon' : '' ?>">
-                    Sakramen & Layanan
-                </a>
-                <a href="<?= site_url('admin/jadwal-misa') ?>"
-                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/jadwal-misa') ? 'bg-maroon/10 text-maroon' : '' ?>">
-                    Jadwal Misa
-                </a>
-                <a href="<?= site_url('admin/wilayah') ?>"
-                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/wilayah') ? 'bg-maroon/10 text-maroon' : '' ?>">
-                    Wilayah & Lingkungan
-                </a>
-                <a href="<?= site_url('admin/berita') ?>"
-                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/berita') ? 'bg-maroon/10 text-maroon' : '' ?>">
-                    Berita & Kegiatan
-                </a>
-                <a href="<?= site_url('admin/artikel') ?>"
-                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/artikel') ? 'bg-maroon/10 text-maroon' : '' ?>">
-                    Katekese & Renungan
-                </a>
-                <a href="<?= site_url('admin/galeri') ?>"
-                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/galeri') ? 'bg-maroon/10 text-maroon' : '' ?>">
-                    Galeri
-                </a>
-                <a href="<?= site_url('admin/dokumen') ?>"
-                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/dokumen') ? 'bg-maroon/10 text-maroon' : '' ?>">
-                    Dokumen
-                </a>
-                <a href="<?= site_url('admin/pendaftaran') ?>"
-                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/pendaftaran') ? 'bg-maroon/10 text-maroon' : '' ?>">
-                    Pendaftaran
-                </a>
-            </nav>
+    <div class="mx-auto flex max-w-7xl gap-6 px-4 py-6 lg:px-6">
+        <aside class="hidden w-60 shrink-0 lg:block">
+            <?php $uri = uri_string(); ?>
+            <?= view('admin/partials/sidebar', ['uri' => $uri]) ?>
         </aside>
+
+        <div x-show="sidebarOpen"
+             x-transition
+             @click.outside="sidebarOpen = false"
+             class="fixed inset-0 z-30 bg-stone-900/40 lg:hidden"
+             x-cloak>
+            <aside class="h-full w-72 overflow-y-auto bg-ivory p-4 shadow-xl" @click.stop>
+                <?php $uri = uri_string(); ?>
+                <?= view('admin/partials/sidebar', ['uri' => $uri]) ?>
+            </aside>
+        </div>
 
         <main class="min-w-0 flex-1">
             <?= $this->renderSection('content') ?>

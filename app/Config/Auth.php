@@ -46,9 +46,9 @@ class Auth extends ShieldAuth
      * --------------------------------------------------------------------
      */
     public array $views = [
-        'login'                       => '\CodeIgniter\Shield\Views\login',
+        'login'                       => 'auth/login',
         'register'                    => '\CodeIgniter\Shield\Views\register',
-        'layout'                      => '\CodeIgniter\Shield\Views\layout',
+        'layout'                      => 'auth/layout',
         'action_email_2fa'            => '\CodeIgniter\Shield\Views\email_2fa_show',
         'action_email_2fa_verify'     => '\CodeIgniter\Shield\Views\email_2fa_verify',
         'action_email_2fa_email'      => '\CodeIgniter\Shield\Views\Email\email_2fa_email',
@@ -75,11 +75,11 @@ class Auth extends ShieldAuth
      */
     public array $redirects = [
         'register'          => '/',
-        'login'             => '/',
+        'login'             => '/admin/hero-slide',
         'logout'            => 'login',
         'force_reset'       => '/',
-        'permission_denied' => '/',
-        'group_denied'      => '/',
+        'permission_denied' => '/login',
+        'group_denied'      => '/login',
     ];
 
     /**
