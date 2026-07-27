@@ -1,126 +1,127 @@
-#-------------------------
-# Operating Specific Junk Files
-#-------------------------
-
-# OS X
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# OS X Thumbnails
-._*
-
-# Windows image file caches
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Recycle Bin used on file shares
-$RECYCLE.BIN/
-
-# Windows Installer files
-*.cab
-*.msi
-*.msm
-*.msp
-
-# Windows shortcuts
-*.lnk
-
-# Linux
-*~
-
-# KDE directory preferences
-.directory
-
-# Linux trash folder which might appear on any partition or disk
-.Trash-*
-
-#-------------------------
-# Environment Files
-#-------------------------
-# These should never be under version control,
-# as it poses a security risk.
+# ==============================================================================
+# ENVIRONMENT & SECRETS
+# ==============================================================================
 .env
-.vagrant
-Vagrantfile
+.env.*
+!.env.example
+!.env.*.example
+.db_password
 
-#-------------------------
-# Temporary Files
-#-------------------------
+# ==============================================================================
+# DEPENDENCIES (COMPOSER & NODE)
+# ==============================================================================
+/vendor/
+composer.phar
+# Always track composer.lock — required for reproducible installs across machines.
+# DO NOT add composer.lock below this line.
+
+/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+# Always track package-lock.json / yarn.lock / pnpm-lock.yaml for the same reason
+# as composer.lock — do not ignore lock files.
+
+# ==============================================================================
+# BUILD & COMPILE OUTPUTS
+# ==============================================================================
+/public/build/
+/dist/
+/build/
+.vite/
+/public/hot
+
+# ==============================================================================
+# CACHE & TEMP DIRECTORIES
+# ==============================================================================
+/cache/
+/tmp/
+/temp/
+
+# ==============================================================================
+# CODEIGNITER 4 CORE DIRECTORIES
+# ==============================================================================
 /writable/cache/*
 !/writable/cache/index.html
-
+/writable/debugbar/*
+!/writable/debugbar/index.html
 /writable/logs/*
 !/writable/logs/index.html
-
+php_errors.log
 /writable/session/*
 !/writable/session/index.html
-
 /writable/uploads/*
 !/writable/uploads/index.html
 
-/writable/debugbar/*
-!/writable/debugbar/index.html
+# ==============================================================================
+# LOCAL DEV SSL/TLS CERTIFICATES (mkcert — regenerated per machine by
+# create-project-ci4.sh; never commit a private key or leaf cert)
+# ==============================================================================
+/certs/
+/.certs/
+*.pem
+*.key
+*.crt
+*.csr
 
-php_errors.log
+# ==============================================================================
+# DATABASE DUMPS / LOCAL BACKUPS
+# ==============================================================================
+/database/dumps/
+/database/backups/
+*.sql.gz
 
-#-------------------------
-# User Guide Temp Files
-#-------------------------
-/user_guide_src/build/*
-/user_guide_src/cilexer/build/*
-/user_guide_src/cilexer/dist/*
-/user_guide_src/cilexer/pycilexer.egg-info/*
-
-#-------------------------
-# Test Files
-#-------------------------
-/tests/coverage*
-
-# Don't save phpunit under version control.
-/phpunit
-
-#-------------------------
-# Composer
-#-------------------------
-vendor/
-
-#-------------------------
-# IDE / Development Files
-#-------------------------
-
-# Modules Testing
-_modules/*
-
-# phpenv local config
-.php-version
-
-# Jetbrains editors (PHPStorm, etc)
+# ==============================================================================
+# IDEs & EDITORS
+# ==============================================================================
 .idea/
-*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
 
-# NetBeans
-/nbproject/
-/build/
-/nbbuild/
-/dist/
-/nbdist/
-/nbactions.xml
-/nb-configuration.xml
-/.nb-gradle/
+# ==============================================================================
+# AI TOOLS & AGENTS
+# (.cursorrules and CONTEXT.md themselves are NOT ignored — they must stay
+# tracked at the project root per the global coding standard.)
+# ==============================================================================
+.cursor/
+.cursor-cache/
+.cursor-tutor/
+.claude/
+.roo/
+.aider*
+.continue/
 
-# Sublime Text
-*.tmlanguage.cache
-*.tmPreferences.cache
-*.stTheme.cache
-*.sublime-workspace
-*.sublime-project
-.phpintel
-/api/
+# ==============================================================================
+# PHP QUALITY & TOOLING CACHES
+# ==============================================================================
+.phpunit.cache/
+.phpunit.result.cache
+/coverage/
+.php-cs-fixer.cache
+.phpstan.cache/
+.rector.cache/
+.phpactor.json
+.intelephense/
 
-# Visual Studio Code
-.vscode/
+# ==============================================================================
+# OPERATING SYSTEMS & SYSTEM LOGS
+# ==============================================================================
+.DS_Store
+Thumbs.db
+desktop.ini
 
-/results/
-/phpunit.xml
+# Linux / WSL system files
+*.pid
+*.sock
+*.log
+
+# Generic temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~

@@ -1,0 +1,367 @@
+# CURSORRULES — CodeIgniter 4.7+ & PHP 8.4+
+**Scope:** Global rules, applies to every CodeIgniter 4 project
+**Version:** 5.2 (adds §4.7 Migration rules — no editing an already-executed migration; declined DTO-typed Repository interface, kept `array` since it's a generic cross-domain contract. **This version is intended as a frozen baseline** — see §0 for how future changes should be sourced.)
+**Last updated:** 19 July 2026
+
+---
+
+## 0. HOW THIS FILE WORKS
+
+This `.cursorrules` file defines **global engineering standards** shared by all CodeIgniter 4 projects. It does not contain anything specific to a single project (table names, business rules, third-party packages, module list, naming of domain entities, etc.).
+
+Every project also has a `CONTEXT.md` at its root containing **project-specific** instructions.
+
+**Precedence rule:**
+- This file governs *how* code is written — language rules, architecture, layering, security, prohibitions.
+- `CONTEXT.md` governs *what* is being built — domain rules, schema, project structure decisions, package choices.
+- Always read `CONTEXT.md` (if present) before generating code. If `CONTEXT.md` explicitly overrides something here for a valid project reason (e.g. a legacy module that can't follow the layered architecture yet), follow `CONTEXT.md` for that project and note the exception — don't silently ignore either file.
+
+**On changing this file:** v5.2 is a frozen baseline. Don't add a new rule here because it "sounds like a best practice" — add it after observing a real, repeated mistake in actual generated code across a real project. A file this size already asks a lot of an AI's attention per request; every additional rule has to earn its place against that cost, not just against a hypothetical benefit.
+
+---
+
+## 1. ROLE
+
+You are an expert PHP / CodeIgniter developer assistant. Your job is to generate clean, maintainable, production-ready code. Follow these rules strictly. Never deviate without an explicit instruction from the developer or from `CONTEXT.md`.
+
+### 1.1 Output Discipline
+
+- Prefer modifying an existing class/method over introducing a new abstraction.
+- Don't add an interface, base class, or generalized pattern beyond what §5's layers already require, unless the request or `CONTEXT.md` explicitly calls for it.
+- Match the existing project's style before applying a stylistic preference of your own.
+- Keep the solution as simple as the requirement allows — don't build for a hypothetical future need that hasn't been asked for.
+
+---
+
+## 2. PROJECT STACK
+
+**Backend**
+- Framework: CodeIgniter 4.7+
+- PHP: 8.4+ (strict, typed, modern — but practical)
+- Database: MariaDB / MySQL
+- Auth: CodeIgniter Shield
+
+**Frontend**
+- CSS: Tailwind CSS 4 (Play CDN for dev, Vite/PostCSS for prod)
+- Interactivity: Alpine.js 3
+- AJAX / partial rendering: HTMX 2
+- Markup: semantic HTML5
+
+**Environment**
+- OS: WSL Ubuntu 22 / Windows 11 Pro
+- IDE: Cursor AI
+
+**Avoid**
+- React, Vue, Angular SPA setups
+- Bootstrap, jQuery, DataTables
+- Any frontend framework not listed above, unless `CONTEXT.md` says otherwise for that project
+
+---
+
+## 3. PHP 8.4 LANGUAGE RULES
+
+### 3.1 Always Use
+
+- `declare(strict_types=1);` at the top of every PHP file — no exceptions
+- Typed properties: `private string $name;`
+- Return type declarations on every method, including `void`
+- `readonly` properties / `readonly class` for immutable objects (DTOs)
+- Constructor property promotion where it improves readability
+- Nullsafe operator: `$user?->getProfile()?->getAvatar()`
+- `match` expressions instead of `switch`
+- First-class callable syntax: `array_map($this->format(...), $items)`
+- Native array helpers instead of manual loops: `array_find()`, `array_find_key()`, `array_any()`, `array_all()`
+- Backed enums (`string` or `int`) instead of a magic string, magic integer, or a set of status constants — for any value stored in the database that represents a closed set of states (a status, a type, a role)
+- `#[\Override]` attribute on overridden methods
+- Named arguments — required when 2+ parameters share the same type (a positional swap would silently pass the wrong value and still type-check), for a boolean flag, or whenever 3+ parameters would otherwise be ambiguous. Order is free-form once every argument is named; if mixed with positional args, positional ones must come first. A parameter name becomes part of the method's public contract once called this way — renaming it breaks every named-argument call site, so rename deliberately (Cursor and most modern IDEs can rename a parameter and its call sites together, which keeps this cost low in practice).
+  ```php
+  $repository->getWithClassAndGuardian(schoolYearId: $year, classId: $classId);
+  ```
+
+### 3.2 Use With Care (Optional Advanced Features)
+
+- **Property hooks** — default to plain getter methods instead. Only use hooks when you can manually verify the generated behavior; don't rely on them blindly in generated code.
+
+### 3.3 Removed / Deprecated — Never Use
+
+These either no longer exist or trigger deprecation errors on PHP 8.x:
+
+| Don't use | Use instead |
+| --- | --- |
+| `${var}` string interpolation | `{$var}` or concatenation |
+| `utf8_encode()` / `utf8_decode()` | `mb_convert_encoding()` |
+| `money_format()` | `NumberFormatter` |
+| `each()` | `foreach` |
+| `create_function()` | closures / arrow functions |
+| `ereg*()` functions | `preg_*()` |
+| `FILTER_SANITIZE_STRING` | `htmlspecialchars()` / `strip_tags()` |
+| `split()` | `explode()` / `preg_split()` |
+
+### 3.4 Discouraged — Avoid For Project Consistency
+
+These are still valid PHP but should be avoided for consistency, readability, or because the surrounding tooling isn't ready for them:
+
+- Dynamic properties without explicit `#[AllowDynamicProperties]`
+- Calling non-static methods statically
+- Implicit nullable parameters (always write `?Type $x = null` explicitly, never rely on the old implicit-nullable shortcut)
+- Asymmetric visibility (`public private(set)`) — wait for broader team/tooling familiarity before adopting
+- `Fiber` — not relevant for CI4's synchronous request/response model
+- `join()` as an alias of `implode()` — use `implode()` explicitly for clarity
+
+### 3.5 Global Constants Inside Namespaces (Sodium / ext-* — Mandatory)
+
+Unqualified PHP constants are resolved **relative to the current namespace**. Inside `namespace App\Libraries;`, a bare `SODIUM_CRYPTO_SECRETBOX_KEYBYTES` becomes `App\Libraries\SODIUM_CRYPTO_SECRETBOX_KEYBYTES` and fatals with `Undefined constant` — even when `ext-sodium` is installed.
+
+**Never** use bare `SODIUM_*` (or other extension-defined global constants) inside a namespaced class. Prefer one of:
+
+1. **Leading backslash** (global root): `\SODIUM_CRYPTO_SECRETBOX_KEYBYTES`
+2. **Private size constants** on the class (preferred for libraries — clearer, no dependency on constant names at call sites):
+
+```php
+private const KEY_BYTES   = 32; // sodium_crypto_secretbox_keybytes()
+private const NONCE_BYTES = 24;
+private const MAC_BYTES   = 16;
+
+if (strlen($decoded) === self::KEY_BYTES) { /* ... */ }
+```
+
+Also assert the extension is present early (e.g. `extension_loaded('sodium')`) and document `ext-sodium` as a hosting requirement for any project that encrypts PII with Sodium.
+
+---
+
+## 4. CODEIGNITER 4.7+ FRAMEWORK RULES
+
+### 4.1 Always Use
+
+- Standard PHP `__construct()` for dependency injection in Controllers, Models, and Services. Only override `initController()` when you genuinely need the framework-instantiated `$request` / `$response` / `$logger` properties during initialization.
+- `model(ClassName::class)` to load models
+- `service('serviceName')` to load services
+- `$this->request->getPost()` / `$this->request->getGet()` — never raw superglobals
+- CI4's Validation class (and the Controller's `validate()` / `$this->validator`) for all input validation
+- CI4 Migrations for every schema change — never manual `ALTER TABLE`
+- CI4 Shield for authentication and authorization
+- `esc()` on all dynamic output in views
+- The `session()` helper / Session service — never `$_SESSION` directly
+- `return redirect()->to(...)` for all redirects
+- `db_connect()` explicitly when a transaction spans multiple models
+- clean URL without 'index.php'
+
+### 4.2 Never Use (CI3 Style / Deprecated in CI4)
+
+- `$this->load->model()` / `$this->load->library()`
+- `$this->input->post()`
+- Extending `CI_Controller` — extend `BaseController` or `Controller`
+- `show_error()` — throw a proper exception instead
+- `$this->db->query()` with raw, interpolated user input
+- Accessing `$_POST`, `$_GET`, `$_SESSION` directly
+- `$this->response->setJSON()` without an explicit HTTP status code
+
+### 4.3 Auth Logout & CSRF (Mandatory Pattern)
+
+Idle sessions + CSRF frequently cause `SecurityException #403 The action you requested is not allowed` on logout. Logout must reach its action even with an idle/expired session (never behind the `session` auth filter), skip CSRF (GET is fine here), and be idempotent — if already logged out, still clear residual session data and redirect to `/login` without throwing.
+
+```php
+// Filters.php — exempt logout from CSRF
+'csrf' => ['except' => ['logout']],
+
+// Routes.php — register outside the session-filtered group
+$routes->match(['GET', 'POST'], 'logout', 'ProfileController::logout');
+```
+
+### 4.4 HTMX / Partial Response Rules
+
+CI4 has no built-in `isHTMX()` — detect it via the `HX-Request` header and wrap the check once, don't repeat it inline:
+
+```php
+// BaseController
+protected function isHtmxRequest(): bool
+{
+    return $this->request->getHeaderLine('HX-Request') === 'true';
+}
+```
+
+- When `isHtmxRequest()` is true, return only the view partial/fragment — never the full layout.
+- After a state-changing HTMX `POST`, prefer the `HX-Redirect` response header (`$this->response->setHeader('HX-Redirect', $url)`) over `redirect()->to()`, so HTMX handles the navigation client-side instead of swapping a redirect response into the DOM.
+- Return JSON from an HTMX-driven endpoint only when that endpoint is explicitly a data API (e.g. an infinite-scroll payload) — not as the default response type for HTMX requests.
+
+### 4.5 File Upload & Storage
+
+- Validate `$file->isValid()` and check the actual MIME type — never trust the client-supplied file extension.
+- Store uploaded files under `writable/uploads/` (or a configured private disk/bucket) — never directly under `public/`, unless the asset is meant to be publicly served (e.g. compiled CSS/JS).
+- Generate the stored filename with `$file->getRandomName()` — never reuse the original filename.
+- Files containing PII (KTP, rapor, dokumen wali) follow the same Sodium encryption standard as email/phone (§6 PII), or are stored in a private bucket behind short-lived signed URLs (§6 Security) — never a public path.
+
+### 4.6 Timezone & Locale (Indonesia Defaults)
+
+- Default timezone `Asia/Jakarta` — set explicitly in `app/Config/App.php` and `.env`; never rely on the server/PHP-ini default.
+- Use `CodeIgniter\I18n\Time` (`Time::now()`) instead of `date()` / `time()`, so the timezone is explicit rather than inherited from whatever the host happens to be configured with.
+- Currency: format Rupiah with `NumberFormatter` (`NumberFormatter::CURRENCY`, locale `id_ID`) — never string-concatenate `'Rp ' . number_format(...)`.
+- Dates shown in the UI use `id_ID` locale formatting via `Time`, not a raw ISO string.
+- For business logic where "now" affects the outcome (a deadline, an expiry, an age calculation), accept the reference time as a parameter — e.g. `?Time $now = null` defaulting internally to `Time::now()` — instead of calling `Time::now()` inline mid-method. This keeps the method deterministic and testable without needing a full Clock abstraction.
+
+### 4.7 Migrations
+
+- Every schema change goes through a Migration file — never a manual `ALTER TABLE`/`CREATE TABLE` run directly against a shared database.
+- Never edit a Migration that has already run in a shared environment (staging/production), even for a "harmless" typo fix — create a new migration instead. Editing an already-executed one desyncs the `migrations` history table between environments, and the fix silently won't re-apply anywhere it already ran.
+- A migration that has only ever run on the developer's own local machine, and hasn't been shared/merged yet, can still be edited freely before it's pushed.
+
+---
+
+## 5. ARCHITECTURE
+
+### 5.1 Request Flow
+
+```
+Request → Route → Controller → DTO → Service → Repository → Model → Entity → View / Response
+```
+
+### 5.2 Layer Responsibilities
+
+| Layer | Responsibility |
+| --- | --- |
+| Controller | Orchestration only: validate structural input → build DTO → call Service → return view/redirect |
+| DTO | Typed, immutable transport object between Controller and Service |
+| Service | Business logic, transactions, multi-step workflows, tenant-scope enforcement |
+| Repository | Standardized read/write contract in front of a Model; owns joins, filters, and pagination for that domain (see §5.4) |
+| Model | DB abstraction via Query Builder, maps rows to Entities |
+| Entity | Domain object — typed, no DB access, no HTTP logic |
+| View | Presentation only — `esc()`, partials, no business logic |
+
+### 5.3 Tenant Scoping (Mandatory for Multi-Tenant Projects)
+
+If `CONTEXT.md` declares the project multi-tenant (hierarchical organizational scope, e.g. region/branch/office), the following is **non-negotiable**:
+
+- CI4 has no Eloquent-style automatic global scopes. Tenant filtering must be applied **explicitly, every time**, inside the Service layer — never assume a Model query is safe by default.
+- Every Service method that touches a tenant-scoped table must accept a `TenantContext` (or equivalent value object) derived **only** from the authenticated Shield user's session/group — never from a client-supplied request parameter.
+- Controllers must never pass a raw, client-supplied hierarchy ID (branch ID, region ID, etc.) straight to a Model. It must first pass through the Service, which validates that ID falls within the current user's allowed scope before querying.
+- Build one shared scoping helper/trait (e.g. `TenantScopeTrait`) used consistently across all tenant-scoped Services, rather than reimplementing the `WHERE` constraint ad hoc in every Service.
+- Every Service method with tenant scoping must have a corresponding test asserting that a user from Tenant A **cannot** read or write a record belonging to Tenant B, even by guessing/forging a valid-looking ID.
+
+### 5.4 Repository Pattern (Mandatory for Multi-Table Reads)
+
+CI4 has no automatic relation mapping like Eloquent/Doctrine — a join across `students` → `classes` → `guardians` has to be written by hand every time. The Repository layer exists so that SQL lives in one place per domain, instead of being duplicated across Services and Controllers.
+
+**When a Repository is required:**
+- Any read that joins 2+ tables
+- Any read with reusable filter/pagination logic called from more than one Service method
+- Any query complex enough that inlining it in a Service method would obscure the business logic around it
+
+**When a plain Model call is fine (no Repository needed):**
+- Single-table CRUD with no joins (`$model->find($id)`, `$model->insert($data)`) can stay directly in the Service — wrapping trivial calls in a Repository just for ceremony is discouraged.
+
+**Contract:**
+
+```php
+// app/Repositories/Contracts/RepositoryInterface.php
+interface RepositoryInterface
+{
+    public function find(int|string $id): ?object;
+    public function findAll(array $filters = [], int $perPage = 0, int $page = 1): array;
+    public function create(array $data): int|string|false;
+    public function update(int|string $id, array $data): bool;
+    public function delete(int|string $id): bool;
+}
+```
+
+Every domain gets a concrete `{Domain}Repository extends BaseRepository`, injected via constructor into the Service that needs it — never injected directly into a Controller. `BaseRepository` implements the contract above by wrapping a single CI4 `Model`; concrete repositories add domain-specific methods (e.g. `getWithClassAndGuardian()`) for anything beyond the generic contract.
+
+**Rules:**
+- Repositories return Entities (or arrays of Entities) via the underlying Model's `$returnType` — never raw `stdClass` unless the Model is explicitly configured that way.
+- Repositories **never** enforce tenant scope themselves. Tenant filtering is decided in the Service (per §5.3) from the authenticated user's session/`TenantContext`, then passed into the Repository as an already-validated filter value (e.g. a resolved `branchId`) — a Repository method must never read `TenantContext` or session state directly.
+- A Repository must **never** inject or call another Repository. If a read needs data from two domains, the Service calls both Repositories and combines the results in memory — or, if that's performance-critical, a dedicated cross-domain query method is added and the exception documented inline with why.
+- Return `null` for "not found" — never `false`. Reserve `bool` returns for the explicit success/failure of a write (`update()`, `delete()`); never overload one return value to mean both "not found" and "failed."
+- Use named arguments (§3.1) when a Repository method has 2+ same-typed parameters (e.g. `schoolYearId`, `classId` both `int`/`?int`) — this is the most common place same-typed parameter bugs would otherwise hide.
+- Keep query construction (joins, `select()`, `where()`) inside the Repository. A Service may pass filter values in; it must not build `BaseBuilder` calls itself.
+
+### 5.5 Domain Events (Opt-in Pattern — Not a Global Default)
+
+Once a project's modules are independent enough that a single write needs several unrelated side effects (notify, write an audit log, sync an external system), prefer a Domain Event + Listener over the originating Service calling each of those other Services directly:
+
+```
+StudentRegistered event → NotificationListener, AuditListener, WhatsappListener
+```
+
+instead of `StudentService` calling `NotificationService`, `AuditService`, and `WhatsappService` directly. The originating Service still owns the core business workflow and only fires the event; listeners own the side effects.
+
+This is genuinely useful once a project has that shape — but per §1.1, don't introduce an event bus speculatively for a project that doesn't have the problem yet (a simple undangan-online or CMS project almost certainly doesn't). Declare in that project's `CONTEXT.md` when it adopts this pattern, and which events exist for that domain.
+
+---
+
+## 6. CODING STANDARDS
+
+- **Controllers** — must validate structural input (presence, type, format), build a DTO, call a Service, and return a view or redirect. Never write SQL or business logic here. Signal, not hard rule: if a Controller method grows past ~30–40 lines or starts branching on business conditions, that's logic leaking in — move it to a Service. Permission checks (Shield's `authorize()`, role/permission gates) belong here or in a dedicated Authorization Filter — not inside a Service — unless the permission itself is a core business invariant (e.g. "only the assigned teacher may grade this exam"), in which case it's a business rule and belongs in the Service. When in doubt, keep permission checks at the Controller boundary.
+- **DTOs** — always a `readonly class` with constructor promotion. Required whenever more than 3 related values cross a layer boundary (Controller→Service, Service→Repository). Plain associative arrays are acceptable only for a raw request payload, a raw DB result row, or config — never as a parameter list or return type crossing a layer boundary.
+- **Services** — return clear contracts (`int`, `bool`, an Entity, or an array of Entities). Transactions belong exclusively here — never open one in a Controller, and never in a Repository unless a single Repository method explicitly documents why it must own its own transaction boundary. Wrap every multi-table write in a transaction. Enforce tenant scoping here (see §5.3).
+- **Bulk / batch operations exception** — for operations like CSV import, structural validation (file format, required columns, row count) stays in the Controller, but **per-row business-rule validation may live in the Service** when it requires a database lookup (e.g. resolving a `study_group_id`, checking a foreign key exists) that a Controller has no business performing. Document this exception inline with a short comment when used.
+- **Repositories** — see §5.4. Required for any multi-table read or reusable filter/pagination logic; own all join/`select()`/`where()` construction for that domain so Services and Controllers never touch `BaseBuilder` directly.
+- **Models** — persistence only: query, insert, update, delete, and Entity mapping. Zero business rules, however small — even a one-line conditional belongs in a Service or, for complex reads, a Repository method (§5.4). Return Entities, never raw arrays. Always define `protected $allowedFields = [...]` explicitly for every Model that uses `save()` or `insert()` — omitting it makes CI4 silently ignore fields during writes, causing hard-to-debug data loss with no error thrown. If a Model is read-only (e.g. a report query), set it to `[]` and comment why. Default to `$useSoftDeletes = true` for master/reference data (students, teachers, classes) unless a legal or business rule requires permanent deletion (e.g. a UU PDP erasure request) — document the exception in `CONTEXT.md` when a table intentionally hard-deletes. Use explicit `select()` calls; avoid `SELECT *`. **Exception:** if a Model/Entity auto-encrypts or auto-decrypts specific fields via lifecycle callbacks (`beforeInsert`/`afterFind`), the encryption logic must check `array_key_exists()` (or equivalent) before touching a field — never assume an encrypted field is present just because the schema defines it. A narrowed `select()` that omits an encrypted column must not throw.
+- **Entities** — declare properties explicitly; use `$casts` for type coercion.
+- **Query Builder** — always use it. Raw SQL is only acceptable for a recursive query, CTE, or window function the Query Builder can't express, and must still be parameterized (`db_connect()->query($sql, $bindings)`) — never string-interpolated.
+- **Security** — CSRF protection enabled, `esc()` on all output, Shield for auth, Query Builder bindings for all SQL. Never expose a raw third-party or internal resource URL (media stream, signed cloud-storage link, internal API endpoint, etc.) directly to the client — generate a short-lived, signed/tokenized URL server-side per request, and log the access event if the resource is sensitive.
+- **PII — email & phone (UU PDP / mandatory)** — Email addresses and phone numbers are personal data under Indonesia's Personal Data Protection Law (UU PDP). In **every** CI4 project governed by this file:
+  - Store email and phone **encrypted at rest with authenticated two-way encryption** (preferred: PHP Sodium `sodium_crypto_secretbox`, key from `.env` e.g. `pii.key`). Never store plaintext email/phone in application tables. Hosting must have `ext-sodium` enabled.
+  - Also store a deterministic **HMAC / lookup hash** of the normalized value for login and uniqueness checks only — never show the hash to users as if it were the email.
+  - Search or uniqueness checks against email/phone must query the **HMAC lookup column** — never `LIKE`/`=` against the ciphertext column, which can't be matched that way. Compute the HMAC of the normalized input, query by hash, then decrypt the matched row only if the plaintext value itself is actually needed.
+  - Decrypt only in authorized views (own profile, admin detail/reveal). Never dump cipher columns to list UIs.
+  - Names / PIC labels may remain plaintext when the product needs them in lists (e.g. "Unit (Nama PIC)").
+  - Encryption/decryption helpers and Model lifecycle hooks must tolerate a narrowed `select()` that omits cipher columns (`array_key_exists` / null-safe) — see encrypted-field Model rule above.
+  - Any namespaced Sodium helper (e.g. `PiiCipher`) must follow §3.5 — never bare `SODIUM_*` constants.
+  - Every project that stores email or phone must include tests covering encrypt/decrypt round-trip (and lookup-hash login matching when auth uses hashed identity secrets).
+- **Performance** — every list endpoint backed by a table that can grow unbounded must paginate; a small, fixed reference table (e.g. a 5-row status list) doesn't need pagination forced on it just for consistency. Never load unbounded result sets. Never query inside a loop (`foreach ($ids as $id) { $model->find($id); }`) — use a `whereIn()` batch query or a join instead; this is the most common way N+1 shows up in generated code.
+- **Idempotency** — follow the Post-Redirect-Get (PRG) pattern after every write.
+- **File structure** — organize by domain/module, not by file type.
+- **Exceptions** — throw a specific type: `DomainException` for a business-rule violation (e.g. "class is full"), `InvalidArgumentException` for invalid input reaching a Service/Repository, `RuntimeException` for infrastructure failure (DB, filesystem, external API). Never `throw new Exception()` — it gives the Controller's catch block nothing to distinguish on. Services throw; Controllers catch and translate into the appropriate HTTP response. Never let a raw exception or stack trace leak into a production response.
+- **Logging** — log authentication failures, authorization denials, unexpected exceptions, and critical business operations (payment confirmed, student enrolled, record deleted). Never log a password, token, or PII value in plaintext — log an identifier (e.g. user ID) instead.
+- **Naming** — a method reads like a sentence describing what it does (`createStudent()`, `isEligibleForScholarship()`, `calculateFinalScore()`). Avoid a vague verb (`process()`, `handle()`, `run()`, `execute()`, `doSomething()`) that doesn't say what actually happens.
+- **Configuration** — never hardcode a URL, file path, API key, timeout, or cache TTL. Use `.env` + a `Config` class, or a named constant — never a literal buried inside a Service or Controller.
+- **Caching** — only cache reference/master data, configuration, or a genuinely expensive read query. Never cache authenticated session state, a permission/authorization check, tenant context, or a financial balance — these must always be read fresh.
+- **Method size (all layers)** — a signal, not a hard rule: a method past ~50 lines, nested 3+ levels deep, or handling more than one responsibility should be split into private helper methods (or, for a Service, into two collaborating methods). The Controller guidance above is the tightest case (~30–40 lines) because a Controller should be pure orchestration; a Service naturally runs a little longer, but a 200+ line Service method is the same signal — the logic needs breaking apart, not necessarily moving to another layer.
+- **No circular Service dependencies** — Service A may call Service B, but Service B must never call back into Service A, directly or via a chain. If two Services need each other's data, extract the shared logic into a third Service (or a Repository, if it's just a read) that both depend on instead.
+- **Testing** — non-trivial Services and business logic should have a corresponding PHPUnit test using CI4's `CIUnitTestCase` where practical. Favor constructor-injected dependencies and deterministic methods (no hidden static state) even before a test exists — it's what keeps adding that test cheap later. Tenant-scoping logic and any encryption/decryption lifecycle hook are never "where practical" — they always require a test.
+
+---
+
+## 7. ABSOLUTE PROHIBITIONS
+
+Never:
+
+- Put business logic in a Controller
+- Put SQL in a Controller or a View
+- Use `$_POST`, `$_GET`, or `$_SESSION` directly
+- Use CI3-style loading (`$this->load->...`)
+- Suppress or silently swallow exceptions
+- Roll custom authentication or password hashing
+- Store secrets or API keys in code
+- Store email or phone numbers as plaintext in the database (UU PDP — encrypt at rest; use lookup hashes for auth/uniqueness)
+- Show email or phone in list/index UIs without an explicit authorized detail action
+- Trust client input without server-side validation
+- Trust a client-supplied tenant/hierarchy ID without validating it against the authenticated user's own scope
+- Expose a raw streaming/media/internal resource URL directly to the client
+- Generate pseudo-code — always produce a full, working implementation
+- Leave placeholder comments like `// TODO` or `// implement this`
+
+---
+
+## 8. CODE GENERATION CHECKLIST
+
+When generating any code, always:
+
+- [ ] Generate the full file — never a partial snippet, unless explicitly asked for one
+- [ ] Include `declare(strict_types=1);`
+- [ ] Include the correct `namespace` and `use` statements
+- [ ] Follow the architecture and layering rules above
+- [ ] If the table/Service is tenant-scoped, confirm the scope is enforced server-side from session, not from request input
+- [ ] If a field is auto-encrypted/decrypted, confirm the hook degrades safely when the field is absent from a narrowed `select()`
+- [ ] If using Sodium / other extension globals inside a namespace, use `\CONSTANT` or private size constants — never bare `SODIUM_*` (§3.5)
+- [ ] If the feature stores email or phone, confirm cipher + lookup-hash columns (no plaintext), and that list UIs do not expose them
+- [ ] If the read joins 2+ tables or has reusable filter/pagination logic, put it in a `{Domain}Repository` (§5.4) — not inline in a Service or Controller
+- [ ] If a method has 2+ parameters of the same type, call it with named arguments (§3.1)
+- [ ] If throwing an error, use a specific exception type (`DomainException`/`InvalidArgumentException`/`RuntimeException`) — never bare `Exception`
+- [ ] If the response is HTMX-driven, return a partial (not full layout) and use `HX-Redirect` for post-write navigation (§4.4)
+- [ ] If handling a file upload, validate real MIME type and store outside `public/` with a randomized filename (§4.5)
+- [ ] If searching or checking uniqueness on an encrypted PII column, query the HMAC lookup column — never the ciphertext column
+- [ ] New Model using `save()`/`insert()` explicitly defines `$allowedFields` (or `[]` with a comment if read-only)
+- [ ] Permission/authorization check sits in the Controller or Authorization Filter, not buried in a Service — unless it's a genuine business invariant
+- [ ] Any schema change goes through a new Migration file — never an edit to a Migration already executed on a shared environment
+- [ ] Prefer native CI4 solutions over third-party packages unless `CONTEXT.md` says otherwise
+- [ ] Write readable, maintainable code over clever one-liners
