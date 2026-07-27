@@ -73,6 +73,22 @@
                    class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/wilayah') ? 'bg-maroon/10 text-maroon' : '' ?>">
                     Wilayah & Lingkungan
                 </a>
+                <a href="<?= site_url('admin/berita') ?>"
+                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/berita') ? 'bg-maroon/10 text-maroon' : '' ?>">
+                    Berita & Kegiatan
+                </a>
+                <a href="<?= site_url('admin/artikel') ?>"
+                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/artikel') ? 'bg-maroon/10 text-maroon' : '' ?>">
+                    Katekese & Renungan
+                </a>
+                <a href="<?= site_url('admin/galeri') ?>"
+                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/galeri') ? 'bg-maroon/10 text-maroon' : '' ?>">
+                    Galeri
+                </a>
+                <a href="<?= site_url('admin/dokumen') ?>"
+                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/dokumen') ? 'bg-maroon/10 text-maroon' : '' ?>">
+                    Dokumen
+                </a>
             </nav>
         </aside>
 

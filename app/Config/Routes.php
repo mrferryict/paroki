@@ -7,6 +7,9 @@ use CodeIgniter\Router\RouteCollection;
 /** @var RouteCollection $routes */
 $routes->get('/', 'Home::index');
 
+// Unduhan dokumen terkontrol — CONTEXT.md §5 / §4.8
+$routes->get('dokumen/(:num)/unduh', 'DokumenController::download/$1', ['as' => 'dokumen.download']);
+
 // Logout outside the session filter — CSRF-exempt (see Config\Filters).
 // .cursorrules §4.3 / CONTEXT.md §3
 $routes->match(['GET', 'POST'], 'logout', 'ProfileController::logout');
@@ -69,4 +72,36 @@ $routes->group('admin', ['filter' => ['session', 'group:admin']], static functio
     $routes->get('wilayah/(:num)/lingkungan/(:num)/edit', 'Admin\LingkunganController::edit/$1/$2', ['as' => 'admin.lingkungan.edit']);
     $routes->post('wilayah/(:num)/lingkungan/(:num)', 'Admin\LingkunganController::update/$1/$2', ['as' => 'admin.lingkungan.update']);
     $routes->post('wilayah/(:num)/lingkungan/(:num)/delete', 'Admin\LingkunganController::delete/$1/$2', ['as' => 'admin.lingkungan.delete']);
+
+    $routes->get('berita', 'Admin\BeritaController::index', ['as' => 'admin.berita.index']);
+    $routes->get('berita/new', 'Admin\BeritaController::new', ['as' => 'admin.berita.new']);
+    $routes->post('berita', 'Admin\BeritaController::create', ['as' => 'admin.berita.create']);
+    $routes->get('berita/(:num)/edit', 'Admin\BeritaController::edit/$1', ['as' => 'admin.berita.edit']);
+    $routes->post('berita/(:num)', 'Admin\BeritaController::update/$1', ['as' => 'admin.berita.update']);
+    $routes->post('berita/(:num)/delete', 'Admin\BeritaController::delete/$1', ['as' => 'admin.berita.delete']);
+
+    $routes->get('artikel/new', 'Admin\ArtikelController::new', ['as' => 'admin.artikel.new']);
+    $routes->get('artikel/kategori/(:segment)/new', 'Admin\ArtikelController::new/$1', ['as' => 'admin.artikel.new.kategori']);
+    $routes->get('artikel/kategori/(:segment)', 'Admin\ArtikelController::index/$1', ['as' => 'admin.artikel.kategori']);
+    $routes->get('artikel', 'Admin\ArtikelController::index', ['as' => 'admin.artikel.index']);
+    $routes->post('artikel', 'Admin\ArtikelController::create', ['as' => 'admin.artikel.create']);
+    $routes->get('artikel/(:num)/edit', 'Admin\ArtikelController::edit/$1', ['as' => 'admin.artikel.edit']);
+    $routes->post('artikel/(:num)', 'Admin\ArtikelController::update/$1', ['as' => 'admin.artikel.update']);
+    $routes->post('artikel/(:num)/delete', 'Admin\ArtikelController::delete/$1', ['as' => 'admin.artikel.delete']);
+
+    $routes->get('galeri', 'Admin\GaleriController::index', ['as' => 'admin.galeri.index']);
+    $routes->get('galeri/new', 'Admin\GaleriController::new', ['as' => 'admin.galeri.new']);
+    $routes->post('galeri', 'Admin\GaleriController::create', ['as' => 'admin.galeri.create']);
+    $routes->get('galeri/(:num)/edit', 'Admin\GaleriController::edit/$1', ['as' => 'admin.galeri.edit']);
+    $routes->post('galeri/(:num)', 'Admin\GaleriController::update/$1', ['as' => 'admin.galeri.update']);
+    $routes->post('galeri/(:num)/delete', 'Admin\GaleriController::delete/$1', ['as' => 'admin.galeri.delete']);
+    $routes->post('galeri/(:num)/move-up', 'Admin\GaleriController::moveUp/$1', ['as' => 'admin.galeri.move-up']);
+    $routes->post('galeri/(:num)/move-down', 'Admin\GaleriController::moveDown/$1', ['as' => 'admin.galeri.move-down']);
+
+    $routes->get('dokumen', 'Admin\DokumenController::index', ['as' => 'admin.dokumen.index']);
+    $routes->get('dokumen/new', 'Admin\DokumenController::new', ['as' => 'admin.dokumen.new']);
+    $routes->post('dokumen', 'Admin\DokumenController::create', ['as' => 'admin.dokumen.create']);
+    $routes->get('dokumen/(:num)/edit', 'Admin\DokumenController::edit/$1', ['as' => 'admin.dokumen.edit']);
+    $routes->post('dokumen/(:num)', 'Admin\DokumenController::update/$1', ['as' => 'admin.dokumen.update']);
+    $routes->post('dokumen/(:num)/delete', 'Admin\DokumenController::delete/$1', ['as' => 'admin.dokumen.delete']);
 });
