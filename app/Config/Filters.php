@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Config;
 
 use CodeIgniter\Config\Filters as BaseFilters;
@@ -73,7 +75,8 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             // 'honeypot',
-            // 'csrf',
+            // Logout must reach its action even with an idle/expired session (.cursorrules §4.3).
+            'csrf' => ['except' => ['logout']],
             // 'invalidchars',
         ],
         'after' => [
@@ -104,7 +107,18 @@ class Filters extends BaseFilters
      * Example:
      * 'isLoggedIn' => ['before' => ['account/*', 'profiles/*']]
      *
+     * Shield registers session/tokens/group/permission aliases via its Registrar.
+     * Protect /admin/* with session + group:admin when admin routes are added
+     * (CONTEXT.md §3 / §5) — not as a global filter (public pages stay open).
+     *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        'auth-rates' => [
+            'before' => [
+                'login*',
+                'auth/*',
+            ],
+        ],
+    ];
 }

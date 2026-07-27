@@ -23,8 +23,17 @@
 # app.baseURL = ''
 # If you have trouble with `.`, you could also use `_`.
 # app_baseURL = ''
+# Clean URL — no index.php in generated links (.cursorrules §4.1)
+# app.indexPage = ''
+# Default timezone Indonesia (.cursorrules §4.6)
+# app.appTimezone = 'Asia/Jakarta'
 # app.forceGlobalSecureRequests = false
 # app.CSPEnabled = false
+
+#--------------------------------------------------------------------
+# SECURITY (Shield session authenticator)
+#--------------------------------------------------------------------
+# security.csrfProtection = 'session'
 
 #--------------------------------------------------------------------
 # DATABASE
