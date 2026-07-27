@@ -255,7 +255,7 @@ class HomeService
             return '';
         }
 
-        return Time::parse($raw)->setLocale('id')->toLocalizedString('d MMM yyyy');
+        return Time::parse($raw, null, 'id_ID')->toLocalizedString('d MMM yyyy');
     }
 
     private function resolvePublicImage(string $relativePath): string

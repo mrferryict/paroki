@@ -64,6 +64,46 @@ class BeritaService
         return $this->beritaRepository->findLatestPublished($limit);
     }
 
+    public function findPublishedPaginated(?string $kategori, int $page, int $perPage = 12): PaginatedResultDto
+    {
+        return $this->findPaginated(new ContentListFilterDto(
+            kategori: $kategori !== '' ? $kategori : null,
+            status: PublishStatus::Terbit->value,
+            page: max(1, $page),
+            perPage: $perPage,
+        ));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function mapForPublicCard(Berita $item): array
+    {
+        $kategori = BeritaKategori::tryFromString((string) ($item->kategori ?? ''));
+
+        return [
+            'id'            => (int) $item->id,
+            'judul'         => (string) ($item->judul ?? ''),
+            'slug'          => (string) ($item->slug ?? ''),
+            'kategori'      => $kategori?->value ?? (string) ($item->kategori ?? ''),
+            'kategoriLabel' => $kategori?->label() ?? (string) ($item->kategori ?? ''),
+            'ringkasan'     => (string) ($item->ringkasan ?? ''),
+            'gambar'        => $this->resolvePublicImage((string) ($item->gambar_utama ?? '')),
+            'tanggalTerbit' => $this->formatPublicDate((string) ($item->tanggal_terbit ?? '')),
+            'href'          => site_url('berita/' . ($item->slug ?? '')),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function mapForPublicDetail(Berita $item): array
+    {
+        return array_merge($this->mapForPublicCard($item), [
+            'konten' => (string) ($item->konten ?? ''),
+        ]);
+    }
+
     public function findBySlug(string $slug): Berita
     {
         $berita = $this->beritaRepository->findBySlug($slug);
@@ -237,5 +277,23 @@ class BeritaService
         if (is_file($fullPath)) {
             unlink($fullPath);
         }
+    }
+
+    private function formatPublicDate(string $raw): string
+    {
+        if ($raw === '') {
+            return '';
+        }
+
+        return Time::parse($raw, null, 'id_ID')->toLocalizedString('d MMM yyyy');
+    }
+
+    private function resolvePublicImage(string $relativePath): string
+    {
+        if ($relativePath === '') {
+            return '';
+        }
+
+        return base_url($relativePath);
     }
 }

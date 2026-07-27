@@ -64,10 +64,14 @@ Semua tabel referensi/master pakai `$useSoftDeletes = true` kecuali dinyatakan l
 ### 4.6 `berita` (Berita & Kegiatan)
 `id, judul, slug (unique), kategori (enum: pengumuman|kegiatan_paroki|pelayanan_sosial|kegiatan_wilayah|liturgi), ringkasan, konten, gambar_utama, status (enum: draft|terbit), tanggal_terbit (nullable), created_at, updated_at, deleted_at`
 - Bisa tumbuh tanpa batas → **wajib paginasi** (§6 Performance).
+- Halaman publik hanya menampilkan baris `status = terbit`.
+- `gambar_utama` disimpan relatif terhadap `public/` (mis. `uploads/berita/{random}`) — bukan path absolut.
 
 ### 4.7 `artikel` (Katekese & Renungan — satu tabel untuk 4 kategori, bukan 4 tabel terpisah)
 `id, judul, slug (unique), kategori (enum: artikel_iman|renungan_harian|orang_kudus|mutiara_biblika), konten, status (enum: draft|terbit), tanggal_terbit, created_at, updated_at, deleted_at`
 - Wajib paginasi per kategori.
+- Halaman publik hanya menampilkan baris `status = terbit`.
+- URL detail: `/katekese/{kategori}/{slug}` — segment `kategori` **harus cocok** dengan kolom `kategori` di DB (validasi di `ArtikelService::findPublishedByKategoriAndSlug`).
 
 ### 4.8 `dokumen` (Dokumen & Materi Unduhan)
 `id, nama, file_path, kategori, created_at, updated_at, deleted_at`
@@ -89,11 +93,17 @@ Semua tabel referensi/master pakai `$useSoftDeletes = true` kecuali dinyatakan l
 ## 5. Rute (garis besar)
 
 **Publik**
-- `GET /` — Beranda (hero + seluruh section, sesuai `paroki-landing.html`)
-- `GET /berita`, `GET /berita/{slug}`
-- `GET /katekese/{kategori?}`, `GET /katekese/{kategori}/{slug}`
+- `GET /` — Beranda (hero + seluruh section, sesuai `paroki-landing.html`); data dari `HomeService::getLandingData()`
+- `GET /berita` — arsip berita terbit (paginasi 12/halaman); filter opsional `?kategori={kategori}` (query string)
+- `GET /berita/{slug}` — detail berita terbit
+- `GET /katekese` — arsip semua artikel terbit
+- `GET /katekese/{kategori}` — arsip per kategori (`artikel_iman|renungan_harian|orang_kudus|mutiara_biblika`)
+- `GET /katekese/{kategori}/{slug}` — detail artikel terbit
 - `GET /dokumen/{id}/unduh` — download terkontrol, bukan path publik langsung
 - `POST /formulir` — simpan ke `pendaftaran`; respons HTMX partial (§4.4), bukan redirect penuh
+
+Controller publik: `Home`, `BeritaController`, `KatekeseController`, `FormulirController`, `DokumenController`.
+Urutan route `katekese`: detail (`/{kategori}/{slug}`) didaftarkan **sebelum** arsip per kategori (`/{kategori}`).
 
 **Admin** (prefix `/admin`, di belakang Shield)
 - `/admin/wilayah`, `/admin/wilayah/{id}/lingkungan`
@@ -105,17 +115,25 @@ Semua tabel referensi/master pakai `$useSoftDeletes = true` kecuali dinyatakan l
 
 ## 6. Frontend
 
-- Struktur View: `app/Views/layouts/main.php` (layout publik), `app/Views/layouts/admin.php`
-  (layout admin), `app/Views/partials/*` (satu partial per section: hero, profil, jadwal, sakramen,
-  berita, katekese, formulir, kontak, footer) — mengikuti pembagian section di `paroki-landing.html`.
+- Struktur View:
+  - `app/Views/layouts/main.php` — layout **beranda** one-page (Alpine `landingPage()`, semua section)
+  - `app/Views/layouts/public.php` — layout **arsip & detail** (berita, katekese): header ringkas + footer
+  - `app/Views/layouts/admin.php` — layout admin
+  - `app/Views/partials/*` — section beranda (hero, profil, jadwal, sakramen, berita, katekese, formulir, kontak, footer)
+  - `app/Views/berita/*`, `app/Views/katekese/*` — halaman arsip/detail konten
+  - `app/Views/partials/public_footer.php`, `public_pagination.php` — shared untuk layout publik
 - Ganti seluruh array JS statis di prototipe (`heroSlides`, `bidangDPH`, `wilayahList`,
   `sakramenList`, `beritaList`, `katekeseList`, `dokumenList`) dengan data dari Controller,
   di-passing ke View lalu ke Alpine via `json_encode($data, JSON_HEX_APOS | JSON_HEX_QUOT)`.
+- Halaman arsip/detail **tidak** memakai Alpine data landing — render server-side PHP; card/list memakai
+  `BeritaService::mapForPublicCard()` / `ArtikelService::mapForPublicCard()`.
+- Konten `ringkasan`/`konten` berita & artikel dari admin saat ini plain text (textarea) — tampilkan
+  dengan `esc()` + `whitespace-pre-line`, bukan raw HTML.
 - Form admin (CRUD) pakai partial + HTMX swap (§4.4) — bukan reload halaman penuh.
 - Tailwind: Play CDN untuk pengembangan, tapi build produksi **wajib** pindah ke Vite/PostCSS
   (§2 Frontend stack) sebelum go-live — jangan ship Play CDN ke production.
-- Palet warna (maroon/gold/ivory), font, dan symbol SVG ikon tetap dipakai sama persis dari
-  prototipe.
+- Palet warna admin saat ini `#722F37` (maroon); prototipe `paroki-landing.html` memakai `#6B1220` —
+  penyelarasan pixel-perfect dengan prototipe masih outstanding.
 
 ## 7. Catatan PII Khusus Proyek Ini
 
@@ -129,15 +147,41 @@ may remain plaintext").
 Hosting **wajib** mengaktifkan `ext-sodium` — dokumentasikan ini di README deployment. Kunci enkripsi
 (`pii.key`) disimpan di `.env`, tidak pernah di kode.
 
-## 8. Urutan Pembangunan Modul (disarankan)
+**Konfigurasi `pii.key` (wajib di setiap environment):**
+- Generate: `php -r "echo sodium_bin2base64(random_bytes(32), SODIUM_BASE64_VARIANT_ORIGINAL);"`
+- Salin ke `.env`: `pii.key = {base64}`
+- Tanpa key ini, `PiiCipher` gagal saat konstruktor — termasuk saat beranda memuat `HomeService` →
+  `WilayahService` (meskipun section publik tidak mendekripsi PII).
+- **Satu database = satu `pii.key` identik** di semua server yang share DB; backup key di tempat aman
+  terpisah dari repo. Key beda = data terenkripsi tidak bisa dibuka.
 
-1. Bootstrap proyek + Shield + konfigurasi dasar
-2. Seluruh migration (skema di atas)
-3. Library `PiiCipher` (Sodium) + test roundtrip — **sebelum** modul yang butuh field terenkripsi
-4. Modul referensi kecil dulu (hero_slide, jadwal_misa, sakramen_jenis, dewan_paroki_bidang) — sebagai
-   pola percontohan Migration→Entity→Model→DTO→Service→Controller admin→View admin
-5. Wilayah & Lingkungan (perkenalkan Repository — join 2 tabel; pakai `PiiCipher` untuk kontak ketua)
-6. Berita, Artikel, Galeri, Dokumen (CRUD admin + view publik + paginasi)
-7. Pendaftaran (paling sensitif — PII, enkripsi, admin reveal, status workflow)
-8. Rakit halaman publik penuh (Beranda + halaman detail), wiring HTMX untuk formulir
-9. Testing menyeluruh (PHPUnit) + checklist §8 `.cursorrules` + persiapan deployment
+## 8. Keputusan Teknis Proyek
+
+- **Entity `Berita` / `Artikel`:** kolom `kategori` dan `status` **tidak** di-cast ke backed enum di
+  `$casts` — CI4 `DataCaster` belum menangani enum class. Konversi ke `BeritaKategori` /
+  `ArtikelKategori` / `PublishStatus` dilakukan di Service via `tryFrom()` / perbandingan string.
+- **Format tanggal UI:** `Time::parse($raw, null, 'id_ID')->toLocalizedString('d MMM yyyy')` — jangan
+  pakai `setLocale()` (tidak tersedia di CI4 `Time`).
+- **Read publik berita/artikel:** `findPublishedPaginated()` memaksa filter `status = terbit`; mapping
+  card/detail di Service (`mapForPublicCard`, `mapForPublicDetail`), bukan di View.
+
+## 9. Seeder & Data Contoh
+
+- `BeritaArtikelSeeder` — 3 berita + 4 artikel sample (satu per kategori artikel), semua `terbit`.
+  Idempotent: dilewati jika tabel sudah berisi baris. Dipanggil dari `DatabaseSeeder`.
+- Jalankan: `php spark db:seed BeritaArtikelSeeder` (atau `php spark db:seed DatabaseSeeder`).
+
+## 10. Urutan Pembangunan Modul (disarankan)
+
+1. Bootstrap proyek + Shield + konfigurasi dasar ✅
+2. Seluruh migration (skema di atas) ✅
+3. Library `PiiCipher` (Sodium) + test roundtrip — **sebelum** modul yang butuh field terenkripsi ✅
+4. Modul referensi kecil dulu (hero_slide, jadwal_misa, sakramen_jenis, dewan_paroki_bidang) ✅
+5. Wilayah & Lingkungan (Repository + PiiCipher untuk kontak ketua) ✅
+6. Berita, Artikel, Galeri, Dokumen — CRUD admin ✅; view publik berita/katekese + paginasi ✅;
+   unduhan dokumen ✅; galeri publik (section beranda) ✅
+7. Pendaftaran (PII, enkripsi, admin reveal, status workflow) ✅
+8. Beranda (`HomeService` + partials) ✅; halaman arsip/detail berita & katekese ✅; HTMX formulir ✅
+9. Outstanding: selaraskan partial beranda dengan `paroki-landing.html` (palet/SVG); upload orchestration
+   HeroSlide/Galeri/Dokumen ke Service (sisa audit §8); build Tailwind produksi (Vite); testing menyeluruh +
+   checklist §8 `.cursorrules` + persiapan deployment

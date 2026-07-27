@@ -21,7 +21,7 @@ class BeritaRepository extends BaseRepository
     public function findPaginated(ContentListFilterDto $filter): PaginatedResultDto
     {
         $builder = $this->model
-            ->select('id, judul, slug, kategori, status, tanggal_terbit, created_at')
+            ->select('id, judul, slug, kategori, ringkasan, gambar_utama, status, tanggal_terbit, created_at')
             ->orderBy('tanggal_terbit', 'DESC')
             ->orderBy('id', 'DESC');
 

@@ -7,6 +7,13 @@ use CodeIgniter\Router\RouteCollection;
 /** @var RouteCollection $routes */
 $routes->get('/', 'Home::index');
 
+// Berita & Katekese publik — CONTEXT.md §5
+$routes->get('berita/(:segment)', 'BeritaController::show/$1', ['as' => 'berita.show']);
+$routes->get('berita', 'BeritaController::index', ['as' => 'berita.index']);
+$routes->get('katekese/(:segment)/(:segment)', 'KatekeseController::show/$1/$2', ['as' => 'katekese.show']);
+$routes->get('katekese/(:segment)', 'KatekeseController::index/$1', ['as' => 'katekese.kategori']);
+$routes->get('katekese', 'KatekeseController::index', ['as' => 'katekese.index']);
+
 // Unduhan dokumen terkontrol — CONTEXT.md §5 / §4.8
 $routes->get('dokumen/(:num)/unduh', 'DokumenController::download/$1', ['as' => 'dokumen.download']);
 

@@ -52,6 +52,70 @@ class ArtikelService
         return $this->artikelRepository->findLatestPublished($kategori, $limit);
     }
 
+    public function findPublishedPaginated(?string $kategori, int $page, int $perPage = 12): PaginatedResultDto
+    {
+        return $this->findPaginated(new ContentListFilterDto(
+            kategori: $kategori !== '' ? $kategori : null,
+            status: PublishStatus::Terbit->value,
+            page: max(1, $page),
+            perPage: $perPage,
+        ));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function mapForPublicCard(Artikel $item): array
+    {
+        $kategori = ArtikelKategori::tryFromString((string) ($item->kategori ?? ''));
+
+        $excerpt = strip_tags((string) ($item->konten ?? ''));
+
+        if (mb_strlen($excerpt) > 140) {
+            $excerpt = mb_substr($excerpt, 0, 137) . '…';
+        }
+
+        $kategoriValue = $kategori?->value ?? (string) ($item->kategori ?? '');
+
+        return [
+            'id'            => (int) $item->id,
+            'judul'         => (string) ($item->judul ?? ''),
+            'slug'          => (string) ($item->slug ?? ''),
+            'kategori'      => $kategoriValue,
+            'kategoriLabel' => $kategori?->label() ?? $kategoriValue,
+            'ringkasan'     => $excerpt,
+            'tanggalTerbit' => $this->formatPublicDate((string) ($item->tanggal_terbit ?? '')),
+            'href'          => site_url('katekese/' . $kategoriValue . '/' . ($item->slug ?? '')),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function mapForPublicDetail(Artikel $item): array
+    {
+        return array_merge($this->mapForPublicCard($item), [
+            'konten' => (string) ($item->konten ?? ''),
+        ]);
+    }
+
+    public function findPublishedByKategoriAndSlug(string $kategori, string $slug): Artikel
+    {
+        if (ArtikelKategori::tryFromString($kategori) === null) {
+            throw new DomainException('Artikel tidak ditemukan.');
+        }
+
+        $artikel = $this->findBySlug($slug);
+
+        $artikelKategori = (string) ($artikel->kategori ?? '');
+
+        if ($artikelKategori !== $kategori) {
+            throw new DomainException('Artikel tidak ditemukan.');
+        }
+
+        return $artikel;
+    }
+
     public function findBySlug(string $slug): Artikel
     {
         $artikel = $this->artikelRepository->findBySlug($slug);
@@ -150,5 +214,14 @@ class ArtikelService
         }
 
         return Time::parse(trim($rawValue));
+    }
+
+    private function formatPublicDate(string $raw): string
+    {
+        if ($raw === '') {
+            return '';
+        }
+
+        return Time::parse($raw, null, 'id_ID')->toLocalizedString('d MMM yyyy');
     }
 }
