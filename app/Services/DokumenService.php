@@ -146,6 +146,11 @@ class DokumenService
         return WRITEPATH . ltrim($relativePath, '/');
     }
 
+    public function publicDownloadUrl(int $id): string
+    {
+        return site_url(route_to('dokumen.download', $id));
+    }
+
     private function removeStoredFile(string $relativePath): void
     {
         if ($relativePath === '') {

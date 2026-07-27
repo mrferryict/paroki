@@ -7,6 +7,7 @@ namespace App\Repositories;
 use App\DTOs\Shared\ContentListFilterDto;
 use App\DTOs\Shared\PaginatedResultDto;
 use App\Entities\Artikel;
+use App\Enums\PublishStatus;
 use App\Models\ArtikelModel;
 use CodeIgniter\Pager\PagerInterface;
 
@@ -39,6 +40,25 @@ class ArtikelRepository extends BaseRepository
         $pager = $this->model->pager;
 
         return new PaginatedResultDto(items: $items, pager: $pager);
+    }
+
+    /**
+     * @return list<Artikel>
+     */
+    public function findLatestPublished(?string $kategori, int $limit): array
+    {
+        $builder = $this->model
+            ->select('id, judul, slug, kategori, konten, tanggal_terbit, created_at')
+            ->where('status', PublishStatus::Terbit->value)
+            ->orderBy('tanggal_terbit', 'DESC')
+            ->orderBy('id', 'DESC');
+
+        if ($kategori !== null && $kategori !== '') {
+            $builder->where('kategori', $kategori);
+        }
+
+        /** @var list<Artikel> */
+        return $builder->findAll($limit);
     }
 
     public function findBySlug(string $slug): ?Artikel

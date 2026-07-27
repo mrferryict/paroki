@@ -7,6 +7,7 @@ namespace App\Repositories;
 use App\DTOs\Shared\ContentListFilterDto;
 use App\DTOs\Shared\PaginatedResultDto;
 use App\Entities\Berita;
+use App\Enums\PublishStatus;
 use App\Models\BeritaModel;
 use CodeIgniter\Pager\PagerInterface;
 
@@ -39,6 +40,20 @@ class BeritaRepository extends BaseRepository
         $pager = $this->model->pager;
 
         return new PaginatedResultDto(items: $items, pager: $pager);
+    }
+
+    /**
+     * @return list<Berita>
+     */
+    public function findLatestPublished(int $limit): array
+    {
+        /** @var list<Berita> */
+        return $this->model
+            ->select('id, judul, slug, kategori, ringkasan, gambar_utama, tanggal_terbit, created_at')
+            ->where('status', PublishStatus::Terbit->value)
+            ->orderBy('tanggal_terbit', 'DESC')
+            ->orderBy('id', 'DESC')
+            ->findAll($limit);
     }
 
     public function findBySlug(string $slug): ?Berita

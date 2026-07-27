@@ -39,6 +39,19 @@ class HeroSlideService
             ->findAll();
     }
 
+    /**
+     * @return list<HeroSlide>
+     */
+    public function findAllActiveOrdered(): array
+    {
+        /** @var list<HeroSlide> */
+        return $this->heroSlideModel
+            ->where('is_active', 1)
+            ->orderBy('urutan', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->findAll();
+    }
+
     public function findById(int $id): HeroSlide
     {
         $slide = $this->heroSlideModel->find($id);

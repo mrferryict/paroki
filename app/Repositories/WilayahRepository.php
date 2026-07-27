@@ -55,4 +55,49 @@ class WilayahRepository extends BaseRepository
             lingkungan: $lingkungan,
         );
     }
+
+    /**
+     * @return list<WilayahWithLingkunganDto>
+     */
+    public function findAllWithLingkunganForPublic(): array
+    {
+        /** @var list<Wilayah> $wilayahList */
+        $wilayahList = $this->findAllForList();
+
+        if ($wilayahList === []) {
+            return [];
+        }
+
+        $wilayahIds = array_map(static fn (Wilayah $wilayah): int => (int) $wilayah->id, $wilayahList);
+
+        $lingkunganModel = model(LingkunganModel::class);
+
+        /** @var list<Lingkungan> $allLingkungan */
+        $allLingkungan = $lingkunganModel
+            ->select('id, wilayah_id, nama, ketua_nama, created_at, updated_at')
+            ->whereIn('wilayah_id', $wilayahIds)
+            ->orderBy('nama', 'ASC')
+            ->findAll();
+
+        /** @var array<int, list<Lingkungan>> $grouped */
+        $grouped = [];
+
+        foreach ($allLingkungan as $lingkungan) {
+            $wilayahId = (int) $lingkungan->wilayah_id;
+            $grouped[$wilayahId][] = $lingkungan;
+        }
+
+        $result = [];
+
+        foreach ($wilayahList as $wilayah) {
+            $wilayahId = (int) $wilayah->id;
+
+            $result[] = new WilayahWithLingkunganDto(
+                wilayah: $wilayah,
+                lingkungan: $grouped[$wilayahId] ?? [],
+            );
+        }
+
+        return $result;
+    }
 }

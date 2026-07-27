@@ -28,6 +28,19 @@ class JadwalMisaService
             ->findAll();
     }
 
+    /**
+     * @return list<JadwalMisa>
+     */
+    public function findAllActiveOrdered(): array
+    {
+        /** @var list<JadwalMisa> */
+        return $this->jadwalMisaModel
+            ->where('is_active', 1)
+            ->orderBy('urutan', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->findAll();
+    }
+
     public function findById(int $id): JadwalMisa
     {
         $jadwal = $this->jadwalMisaModel->find($id);

@@ -44,6 +44,25 @@ class ArtikelService
         return $this->artikelRepository->findPaginated($filter);
     }
 
+    /**
+     * @return list<Artikel>
+     */
+    public function findLatestPublished(?string $kategori = null, int $limit = 8): array
+    {
+        return $this->artikelRepository->findLatestPublished($kategori, $limit);
+    }
+
+    public function findBySlug(string $slug): Artikel
+    {
+        $artikel = $this->artikelRepository->findBySlug($slug);
+
+        if ($artikel === null || $artikel->status !== PublishStatus::Terbit->value) {
+            throw new DomainException('Artikel tidak ditemukan.');
+        }
+
+        return $artikel;
+    }
+
     public function findById(int $id): Artikel
     {
         $artikel = $this->artikelRepository->find($id);

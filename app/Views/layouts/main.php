@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="<?= esc($title ?? 'Paroki Hati Kudus Yesus') ?> — Profil paroki, jadwal misa, sakramen, berita, katekese, dan formulir pendaftaran.">
+    <title><?= esc($title ?? 'Paroki Hati Kudus Yesus') ?></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        maroon: '#722F37',
+                        gold: '#C5A572',
+                        ivory: '#FAF7F2',
+                    },
+                    fontFamily: {
+                        display: ['"Cormorant Garamond"', 'serif'],
+                        sans: ['"Work Sans"', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <meta name="csrf-token" content="<?= csrf_hash() ?>">
+    <script>
+        document.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').content;
+        });
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .hero-slide-enter { animation: heroFade 0.8s ease-out; }
+        @keyframes heroFade {
+            from { opacity: 0; transform: scale(1.03); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+    <?= $this->renderSection('head') ?>
+</head>
+<body class="bg-ivory font-sans text-stone-800 antialiased"
+      x-data="landingPage()"
+      x-cloak>
+
+    <header class="fixed inset-x-0 top-0 z-50 border-b border-gold/20 bg-maroon/95 text-ivory backdrop-blur-md">
+        <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+            <a href="#hero" class="font-display text-xl font-semibold tracking-tight sm:text-2xl">
+                Paroki Hati Kudus Yesus
+            </a>
+            <nav class="hidden items-center gap-6 text-sm font-medium md:flex">
+                <a href="#profil" class="hover:text-gold transition-colors">Profil</a>
+                <a href="#jadwal" class="hover:text-gold transition-colors">Jadwal</a>
+                <a href="#sakramen" class="hover:text-gold transition-colors">Sakramen</a>
+                <a href="#berita" class="hover:text-gold transition-colors">Berita</a>
+                <a href="#katekese" class="hover:text-gold transition-colors">Katekese</a>
+                <a href="#formulir" class="rounded bg-gold/20 px-4 py-2 hover:bg-gold/30 transition-colors">Formulir</a>
+            </nav>
+            <button type="button"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gold/10 md:hidden"
+                    @click="navOpen = !navOpen"
+                    :aria-expanded="navOpen"
+                    aria-label="Menu">
+                <svg x-show="!navOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <svg x-show="navOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div x-show="navOpen" x-transition class="border-t border-gold/20 px-4 py-4 md:hidden">
+            <div class="flex flex-col gap-3 text-sm font-medium">
+                <a href="#profil" @click="navOpen=false">Profil</a>
+                <a href="#jadwal" @click="navOpen=false">Jadwal</a>
+                <a href="#sakramen" @click="navOpen=false">Sakramen</a>
+                <a href="#berita" @click="navOpen=false">Berita</a>
+                <a href="#katekese" @click="navOpen=false">Katekese</a>
+                <a href="#formulir" @click="navOpen=false" class="rounded bg-gold/20 px-4 py-2 text-center">Formulir</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <?= $this->renderSection('content') ?>
+    </main>
+
+    <?= view('partials/icon_scripts') ?>
+
+    <script>
+        function landingPage() {
+            return {
+                navOpen: false,
+                currentSlide: 0,
+                slideTimer: null,
+                activeWilayah: null,
+                activeKatekeseTab: <?= json_encode($katekeseKategori[0]['value'] ?? 'artikel_iman', JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+                heroSlides: <?= json_encode($heroSlides ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+                bidangDPH: <?= json_encode($bidangDPH ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+                wilayahList: <?= json_encode($wilayahList ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+                sakramenList: <?= json_encode($sakramenList ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+                beritaList: <?= json_encode($beritaList ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+                katekeseList: <?= json_encode($katekeseList ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+                dokumenList: <?= json_encode($dokumenList ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+                katekeseKategori: <?= json_encode($katekeseKategori ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+
+                init() {
+                    if (this.heroSlides.length > 0) {
+                        this.startSlideTimer();
+                    }
+                    if (this.wilayahList.length > 0) {
+                        this.activeWilayah = this.wilayahList[0].id;
+                    }
+                },
+
+                get filteredKatekese() {
+                    return this.katekeseList.filter((item) => item.kategori === this.activeKatekeseTab);
+                },
+
+                get currentHero() {
+                    return this.heroSlides[this.currentSlide] ?? null;
+                },
+
+                startSlideTimer() {
+                    this.stopSlideTimer();
+                    if (this.heroSlides.length <= 1) {
+                        return;
+                    }
+                    this.slideTimer = setInterval(() => this.nextSlide(), 7000);
+                },
+
+                stopSlideTimer() {
+                    if (this.slideTimer) {
+                        clearInterval(this.slideTimer);
+                        this.slideTimer = null;
+                    }
+                },
+
+                nextSlide() {
+                    if (this.heroSlides.length === 0) {
+                        return;
+                    }
+                    this.currentSlide = (this.currentSlide + 1) % this.heroSlides.length;
+                },
+
+                prevSlide() {
+                    if (this.heroSlides.length === 0) {
+                        return;
+                    }
+                    this.currentSlide = (this.currentSlide - 1 + this.heroSlides.length) % this.heroSlides.length;
+                },
+
+                goToSlide(index) {
+                    this.currentSlide = index;
+                    this.startSlideTimer();
+                },
+
+                toggleWilayah(id) {
+                    this.activeWilayah = this.activeWilayah === id ? null : id;
+                },
+
+                iconSvg(name) {
+                    return window.PAROKI_ICONS[name] || window.PAROKI_ICONS.default;
+                },
+
+                scrollToForm(sakramenId) {
+                    const select = document.getElementById('sakramen_jenis_id');
+                    if (select && sakramenId) {
+                        select.value = String(sakramenId);
+                    }
+                    document.getElementById('formulir')?.scrollIntoView({ behavior: 'smooth' });
+                },
+            };
+        }
+    </script>
+</body>
+</html>

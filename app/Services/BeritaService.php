@@ -56,6 +56,25 @@ class BeritaService
         return $this->beritaRepository->findPaginated($filter);
     }
 
+    /**
+     * @return list<Berita>
+     */
+    public function findLatestPublished(int $limit = 6): array
+    {
+        return $this->beritaRepository->findLatestPublished($limit);
+    }
+
+    public function findBySlug(string $slug): Berita
+    {
+        $berita = $this->beritaRepository->findBySlug($slug);
+
+        if ($berita === null || $berita->status !== PublishStatus::Terbit->value) {
+            throw new DomainException('Berita tidak ditemukan.');
+        }
+
+        return $berita;
+    }
+
     public function findById(int $id): Berita
     {
         $berita = $this->beritaRepository->find($id);

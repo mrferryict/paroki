@@ -28,6 +28,7 @@ use App\Services\DewanParokiBidangService;
 use App\Services\DokumenService;
 use App\Services\GaleriService;
 use App\Services\HeroSlideService;
+use App\Services\HomeService;
 use App\Services\JadwalMisaService;
 use App\Services\LingkunganService;
 use App\Services\PendaftaranService;
@@ -44,6 +45,24 @@ class Services extends BaseService
         }
 
         return new HeroSlideService(new HeroSlideModel());
+    }
+
+    public static function homeService(bool $getShared = true): HomeService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('homeService');
+        }
+
+        return new HomeService(
+            static::heroSlideService(false),
+            static::dewanParokiBidangService(false),
+            static::wilayahService(false),
+            static::jadwalMisaService(false),
+            static::sakramenJenisService(false),
+            static::beritaService(false),
+            static::artikelService(false),
+            static::dokumenService(false),
+        );
     }
 
     public static function dewanParokiBidangService(bool $getShared = true): DewanParokiBidangService

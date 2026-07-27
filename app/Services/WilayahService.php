@@ -61,6 +61,14 @@ class WilayahService
         return $result;
     }
 
+    /**
+     * @return list<WilayahWithLingkunganDto>
+     */
+    public function findAllWithLingkunganForPublic(): array
+    {
+        return $this->wilayahRepository->findAllWithLingkunganForPublic();
+    }
+
     public function create(WilayahDto $dto): int
     {
         $kontakFields = $this->encryptRequiredKontak($dto->ketuaKontak);

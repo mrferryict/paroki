@@ -28,6 +28,19 @@ class SakramenJenisService
             ->findAll();
     }
 
+    /**
+     * @return list<SakramenJenis>
+     */
+    public function findAllActiveOrdered(): array
+    {
+        /** @var list<SakramenJenis> */
+        return $this->sakramenJenisModel
+            ->where('is_active', 1)
+            ->orderBy('urutan', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->findAll();
+    }
+
     public function findById(int $id): SakramenJenis
     {
         $jenis = $this->sakramenJenisModel->find($id);
