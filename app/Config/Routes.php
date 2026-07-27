@@ -53,4 +53,20 @@ $routes->group('admin', ['filter' => ['session', 'group:admin']], static functio
     $routes->post('jadwal-misa/(:num)/delete', 'Admin\JadwalMisaController::delete/$1', ['as' => 'admin.jadwal-misa.delete']);
     $routes->post('jadwal-misa/(:num)/move-up', 'Admin\JadwalMisaController::moveUp/$1', ['as' => 'admin.jadwal-misa.move-up']);
     $routes->post('jadwal-misa/(:num)/move-down', 'Admin\JadwalMisaController::moveDown/$1', ['as' => 'admin.jadwal-misa.move-down']);
+
+    $routes->get('wilayah', 'Admin\WilayahController::index', ['as' => 'admin.wilayah.index']);
+    $routes->get('wilayah/new', 'Admin\WilayahController::new', ['as' => 'admin.wilayah.new']);
+    $routes->post('wilayah', 'Admin\WilayahController::create', ['as' => 'admin.wilayah.create']);
+    $routes->get('wilayah/(:num)', 'Admin\WilayahController::show/$1', ['as' => 'admin.wilayah.show']);
+    $routes->get('wilayah/(:num)/edit', 'Admin\WilayahController::edit/$1', ['as' => 'admin.wilayah.edit']);
+    $routes->post('wilayah/(:num)', 'Admin\WilayahController::update/$1', ['as' => 'admin.wilayah.update']);
+    $routes->post('wilayah/(:num)/delete', 'Admin\WilayahController::delete/$1', ['as' => 'admin.wilayah.delete']);
+
+    $routes->get('wilayah/(:num)/lingkungan', 'Admin\LingkunganController::index/$1', ['as' => 'admin.lingkungan.index']);
+    $routes->get('wilayah/(:num)/lingkungan/new', 'Admin\LingkunganController::new/$1', ['as' => 'admin.lingkungan.new']);
+    $routes->post('wilayah/(:num)/lingkungan', 'Admin\LingkunganController::create/$1', ['as' => 'admin.lingkungan.create']);
+    $routes->get('wilayah/(:num)/lingkungan/(:num)', 'Admin\LingkunganController::show/$1/$2', ['as' => 'admin.lingkungan.show']);
+    $routes->get('wilayah/(:num)/lingkungan/(:num)/edit', 'Admin\LingkunganController::edit/$1/$2', ['as' => 'admin.lingkungan.edit']);
+    $routes->post('wilayah/(:num)/lingkungan/(:num)', 'Admin\LingkunganController::update/$1/$2', ['as' => 'admin.lingkungan.update']);
+    $routes->post('wilayah/(:num)/lingkungan/(:num)/delete', 'Admin\LingkunganController::delete/$1/$2', ['as' => 'admin.lingkungan.delete']);
 });

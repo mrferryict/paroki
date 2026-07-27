@@ -69,6 +69,10 @@
                    class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/jadwal-misa') ? 'bg-maroon/10 text-maroon' : '' ?>">
                     Jadwal Misa
                 </a>
+                <a href="<?= site_url('admin/wilayah') ?>"
+                   class="block rounded px-3 py-2 text-sm font-medium hover:bg-maroon/5 <?= str_starts_with($uri, 'admin/wilayah') ? 'bg-maroon/10 text-maroon' : '' ?>">
+                    Wilayah & Lingkungan
+                </a>
             </nav>
         </aside>
 
