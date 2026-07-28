@@ -7,14 +7,12 @@ namespace App\Services;
 use App\DTOs\Wilayah\WilayahWithLingkunganDto;
 use App\Entities\Artikel;
 use App\Entities\Berita;
-use App\Entities\DewanParokiBidang;
-use App\Entities\Dokumen;
 use App\Entities\HeroSlide;
 use App\Entities\JadwalMisa;
 use App\Entities\Lingkungan;
 use App\Entities\SakramenJenis;
-use App\Enums\ArtikelKategori;
 use App\Enums\BeritaKategori;
+use App\Enums\LayananGrup;
 use CodeIgniter\I18n\Time;
 
 class HomeService
@@ -27,7 +25,7 @@ class HomeService
         private readonly SakramenJenisService $sakramenJenisService,
         private readonly BeritaService $beritaService,
         private readonly ArtikelService $artikelService,
-        private readonly DokumenService $dokumenService,
+        private readonly ArtikelKategoriService $artikelKategoriService,
     ) {}
 
     /**
@@ -40,13 +38,13 @@ class HomeService
         return [
             'title'              => 'Paroki Hati Kudus Yesus',
             'heroSlides'         => $this->mapHeroSlides($this->heroSlideService->findAllActiveOrdered()),
-            'bidangDPH'          => $this->mapBidangDph($this->dewanParokiBidangService->findAllOrdered()),
+            'bidangDPH'          => $this->dewanParokiBidangService->findAllForPublicWithPenjabat(),
             'wilayahList'        => $this->mapWilayahList($this->wilayahService->findAllWithLingkunganForPublic()),
             'jadwalList'         => $this->mapJadwalList($jadwalList),
-            'sakramenList'       => $this->mapSakramenList($this->sakramenJenisService->findAllActiveOrdered()),
+            'layananList'        => $this->mapLayananList($this->sakramenJenisService->findAllActiveOrdered()),
+            'layananGrup'        => $this->mapLayananGrup(),
             'beritaList'         => $this->mapBeritaList($this->beritaService->findLatestPublished(limit: 6)),
             'katekeseList'       => $this->mapKatekeseList($this->artikelService->findLatestPublished(kategori: null, limit: 12)),
-            'dokumenList'        => $this->mapDokumenList($this->dokumenService->findAllOrdered()),
             'sakramenFormOptions'=> $this->mapSakramenFormOptions($this->sakramenJenisService->findAllActiveOrdered()),
             'katekeseKategori'   => $this->mapKatekeseKategori(),
             'jenisJadwalLabels'  => $this->jadwalMisaService->jenisOptions(),
@@ -70,21 +68,6 @@ class HomeService
             'cta2Href'   => (string) ($slide->cta2_href ?? '#'),
             'gambar'     => base_url((string) ($slide->gambar ?? '')),
         ], $slides);
-    }
-
-    /**
-     * @param list<DewanParokiBidang> $bidang
-     *
-     * @return list<array<string, mixed>>
-     */
-    private function mapBidangDph(array $bidang): array
-    {
-        return array_map(static fn (DewanParokiBidang $item): array => [
-            'kode'      => (string) ($item->kode ?? ''),
-            'nama'      => (string) ($item->nama_tampilan ?? ''),
-            'deskripsi' => (string) ($item->deskripsi ?? ''),
-            'icon'      => (string) ($item->icon ?? ''),
-        ], $bidang);
     }
 
     /**
@@ -130,15 +113,38 @@ class HomeService
      *
      * @return list<array<string, mixed>>
      */
-    private function mapSakramenList(array $items): array
+    private function mapLayananList(array $items): array
     {
-        return array_map(static fn (SakramenJenis $item): array => [
-            'id'        => (int) $item->id,
-            'kode'      => (string) ($item->kode ?? ''),
-            'nama'      => (string) ($item->nama ?? ''),
-            'deskripsi' => (string) ($item->deskripsi ?? ''),
-            'icon'      => (string) ($item->icon ?? ''),
-        ], $items);
+        return array_map(static function (SakramenJenis $item): array {
+            $grup = LayananGrup::tryFromString((string) ($item->grup ?? ''));
+
+            return [
+                'id'        => (int) $item->id,
+                'kode'      => (string) ($item->kode ?? ''),
+                'grup'      => (string) ($item->grup ?? ''),
+                'grupLabel' => $grup?->sectionLabel() ?? (string) ($item->grup ?? ''),
+                'nama'      => (string) ($item->nama ?? ''),
+                'deskripsi' => (string) ($item->deskripsi ?? ''),
+                'icon'      => (string) ($item->icon ?? ''),
+            ];
+        }, $items);
+    }
+
+    /**
+     * @return list<array<string, string>>
+     */
+    private function mapLayananGrup(): array
+    {
+        $result = [];
+
+        foreach (LayananGrup::cases() as $case) {
+            $result[] = [
+                'value' => $case->value,
+                'label' => $case->label(),
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -186,8 +192,9 @@ class HomeService
     private function mapKatekeseList(array $items): array
     {
         return array_map(function (Artikel $item): array {
-            $kategori = ArtikelKategori::tryFromString((string) ($item->kategori ?? ''));
-            $excerpt  = strip_tags((string) ($item->konten ?? ''));
+            $kategoriValue = (string) ($item->kategori ?? '');
+            $kategoriLabel = $this->artikelKategoriService->getLabelForSlug($kategoriValue) ?? $kategoriValue;
+            $excerpt       = strip_tags((string) ($item->konten ?? ''));
 
             if (mb_strlen($excerpt) > 140) {
                 $excerpt = mb_substr($excerpt, 0, 137) . '…';
@@ -197,28 +204,13 @@ class HomeService
                 'id'            => (int) $item->id,
                 'judul'         => (string) ($item->judul ?? ''),
                 'slug'          => (string) ($item->slug ?? ''),
-                'kategori'      => (string) ($item->kategori ?? ''),
-                'kategoriLabel' => $kategori?->label() ?? (string) ($item->kategori ?? ''),
+                'kategori'      => $kategoriValue,
+                'kategoriLabel' => $kategoriLabel,
                 'ringkasan'     => $excerpt,
                 'tanggalTerbit' => $this->formatDate((string) ($item->tanggal_terbit ?? '')),
-                'href'          => site_url('katekese/' . ($item->kategori ?? '') . '/' . ($item->slug ?? '')),
+                'href'          => site_url('katekese/' . $kategoriValue . '/' . ($item->slug ?? '')),
             ];
         }, $items);
-    }
-
-    /**
-     * @param list<Dokumen> $items
-     *
-     * @return list<array<string, mixed>>
-     */
-    private function mapDokumenList(array $items): array
-    {
-        return array_map(fn (Dokumen $item): array => [
-            'id'          => (int) $item->id,
-            'nama'        => (string) ($item->nama ?? ''),
-            'kategori'    => (string) ($item->kategori ?? ''),
-            'downloadUrl' => $this->dokumenService->publicDownloadUrl((int) $item->id),
-        ], $items);
     }
 
     /**
@@ -228,10 +220,10 @@ class HomeService
     {
         $result = [];
 
-        foreach (ArtikelKategori::cases() as $case) {
+        foreach ($this->artikelKategoriService->findAllActive() as $record) {
             $result[] = [
-                'value' => $case->value,
-                'label' => $case->label(),
+                'value' => (string) ($record->slug ?? ''),
+                'label' => (string) ($record->label ?? ''),
             ];
         }
 

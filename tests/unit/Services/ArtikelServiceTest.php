@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
-use App\Enums\ArtikelKategori;
 use App\Enums\PublishStatus;
 use App\Libraries\SlugGenerator;
 use App\Repositories\ArtikelRepository;
+use App\Services\ArtikelKategoriService;
 use App\Services\ArtikelService;
 use CodeIgniter\Test\CIUnitTestCase;
 
@@ -21,17 +21,19 @@ final class ArtikelServiceTest extends CIUnitTestCase
         $repository = $this->createStub(ArtikelRepository::class);
         $repository->method('slugExists')->willReturn(false);
 
-        $service = new ArtikelService($repository, new SlugGenerator());
+        $kategoriService = $this->createStub(ArtikelKategoriService::class);
+
+        $service = new ArtikelService($repository, new SlugGenerator(), $kategoriService);
         $dto     = $service->buildAdminDto(
             judul: 'Renungan Minggu',
-            kategori: ArtikelKategori::RenunganHarian,
+            kategori: 'renungan_harian',
             konten: 'Konten artikel',
             status: PublishStatus::Terbit,
             tanggalTerbitRaw: null,
         );
 
         $this->assertSame('renungan-minggu', $dto->slug);
-        $this->assertSame(ArtikelKategori::RenunganHarian, $dto->kategori);
+        $this->assertSame('renungan_harian', $dto->kategori);
         $this->assertNotNull($dto->tanggalTerbit);
     }
 }

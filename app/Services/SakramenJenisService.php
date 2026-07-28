@@ -6,8 +6,11 @@ namespace App\Services;
 
 use App\DTOs\SakramenJenis\SakramenJenisDto;
 use App\Entities\SakramenJenis;
+use App\Enums\LayananGrup;
+use App\Enums\SakramenJenisKode;
 use App\Models\SakramenJenisModel;
 use DomainException;
+use InvalidArgumentException;
 use RuntimeException;
 
 class SakramenJenisService
@@ -46,7 +49,7 @@ class SakramenJenisService
         $jenis = $this->sakramenJenisModel->find($id);
 
         if ($jenis === null) {
-            throw new DomainException('Jenis sakramen/layanan tidak ditemukan.');
+            throw new DomainException('Jenis layanan tidak ditemukan.');
         }
 
         return $jenis;
@@ -65,7 +68,7 @@ class SakramenJenisService
         $id = $this->sakramenJenisModel->insert($data);
 
         if ($id === false) {
-            throw new RuntimeException('Gagal menyimpan jenis sakramen/layanan.');
+            throw new RuntimeException('Gagal menyimpan jenis layanan.');
         }
 
         return (int) $id;
@@ -77,11 +80,12 @@ class SakramenJenisService
 
         $data              = $dto->toModelData();
         $data['kode']      = (string) $existing->kode;
+        $data['grup']      = (string) ($existing->grup ?? $dto->grup);
         $data['urutan']    = $dto->urutan > 0 ? $dto->urutan : (int) $existing->urutan;
         $data['is_active'] = $dto->isActive ? 1 : 0;
 
         if (! $this->sakramenJenisModel->update($id, $data)) {
-            throw new RuntimeException('Gagal memperbarui jenis sakramen/layanan.');
+            throw new RuntimeException('Gagal memperbarui jenis layanan.');
         }
     }
 
@@ -90,7 +94,7 @@ class SakramenJenisService
         $this->findById($id);
 
         if (! $this->sakramenJenisModel->delete($id)) {
-            throw new RuntimeException('Gagal menghapus jenis sakramen/layanan.');
+            throw new RuntimeException('Gagal menghapus jenis layanan.');
         }
     }
 
@@ -139,23 +143,31 @@ class SakramenJenisService
         return ((int) ($row->urutan ?? 0)) + 1;
     }
 
+    public function resolveGrupForKode(string $kode): string
+    {
+        $enum = SakramenJenisKode::tryFromString($kode);
+
+        if ($enum === null) {
+            throw new InvalidArgumentException('Kode jenis layanan tidak valid.');
+        }
+
+        return $enum->grup()->value;
+    }
+
     /**
      * @return array<string, string>
      */
     public function kodeOptions(): array
     {
-        return [
-            'baptis'                   => 'Baptis',
-            'komuni_pertama'           => 'Komuni Pertama',
-            'krisma'                   => 'Krisma',
-            'tobat'                    => 'Tobat',
-            'perkawinan'               => 'Perkawinan',
-            'pengurapan_orang_sakit'   => 'Pengurapan Orang Sakit',
-            'misdinar'                 => 'Misdinar',
-            'konsultasi_psikologi'     => 'Konsultasi Psikologi',
-            'konsultasi_hukum'         => 'Konsultasi Hukum',
-            'administrasi'             => 'Administrasi',
-        ];
+        return SakramenJenisKode::options();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function grupOptions(): array
+    {
+        return LayananGrup::options();
     }
 
     private function swapUrutan(SakramenJenis $a, SakramenJenis $b): void
@@ -169,7 +181,7 @@ class SakramenJenisService
         $db->transComplete();
 
         if ($db->transStatus() === false) {
-            throw new RuntimeException('Gagal mengubah urutan jenis sakramen/layanan.');
+            throw new RuntimeException('Gagal mengubah urutan jenis layanan.');
         }
     }
 }

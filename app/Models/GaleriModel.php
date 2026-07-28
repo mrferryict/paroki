@@ -15,16 +15,15 @@ class GaleriModel extends Model
 
     protected $returnType = Galeri::class;
 
-    protected $useSoftDeletes = false;
+    protected $useSoftDeletes = true;
 
     protected $useTimestamps = true;
 
-    protected $createdField = 'created_at';
-
-    protected $updatedField = '';
-
     protected $allowedFields = [
+        'galeri_event_id',
+        'jenis',
         'file_path',
+        'youtube_url',
         'caption',
         'urutan',
     ];

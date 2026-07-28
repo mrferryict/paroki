@@ -7,6 +7,7 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\DTOs\SakramenJenis\SakramenJenisDto;
 use App\Entities\SakramenJenis;
+use App\Enums\SakramenJenisKode;
 use App\Services\SakramenJenisService;
 use CodeIgniter\HTTP\ResponseInterface;
 use DomainException;
@@ -34,13 +35,15 @@ class SakramenJenisController extends BaseController
             return view('admin/sakramen_jenis/partials/list', [
                 'items'       => $items,
                 'kodeOptions' => $this->sakramenJenisService->kodeOptions(),
+                'grupOptions' => $this->sakramenJenisService->grupOptions(),
             ]);
         }
 
         return view('admin/sakramen_jenis/index', [
             'items'       => $items,
-            'title'       => 'Sakramen & Layanan',
+            'title'       => 'Layanan Paroki',
             'kodeOptions' => $this->sakramenJenisService->kodeOptions(),
+            'grupOptions' => $this->sakramenJenisService->grupOptions(),
         ]);
     }
 
@@ -115,6 +118,7 @@ class SakramenJenisController extends BaseController
             return view('admin/sakramen_jenis/partials/list', [
                 'items'       => $this->sakramenJenisService->findAllOrdered(),
                 'kodeOptions' => $this->sakramenJenisService->kodeOptions(),
+                'grupOptions' => $this->sakramenJenisService->grupOptions(),
             ]);
         } catch (DomainException | RuntimeException $e) {
             return $this->listErrorResponse($e->getMessage());
@@ -132,6 +136,7 @@ class SakramenJenisController extends BaseController
         return view('admin/sakramen_jenis/partials/list', [
             'items'       => $this->sakramenJenisService->findAllOrdered(),
                 'kodeOptions' => $this->sakramenJenisService->kodeOptions(),
+                'grupOptions' => $this->sakramenJenisService->grupOptions(),
         ]);
     }
 
@@ -146,6 +151,7 @@ class SakramenJenisController extends BaseController
         return view('admin/sakramen_jenis/partials/list', [
             'items'       => $this->sakramenJenisService->findAllOrdered(),
                 'kodeOptions' => $this->sakramenJenisService->kodeOptions(),
+                'grupOptions' => $this->sakramenJenisService->grupOptions(),
         ]);
     }
 
@@ -163,7 +169,7 @@ class SakramenJenisController extends BaseController
         ];
 
         if ($isCreate) {
-            $rules['kode'] = 'required|in_list[baptis,komuni_pertama,krisma,tobat,perkawinan,pengurapan_orang_sakit,misdinar,konsultasi_psikologi,konsultasi_hukum,administrasi]';
+            $rules['kode'] = 'required|in_list[' . implode(',', array_keys(SakramenJenisKode::options())) . ']';
         }
 
         return $rules;
@@ -175,6 +181,7 @@ class SakramenJenisController extends BaseController
 
         return new SakramenJenisDto(
             kode: (string) $this->request->getPost('kode'),
+            grup: $this->sakramenJenisService->resolveGrupForKode((string) $this->request->getPost('kode')),
             nama: trim((string) $this->request->getPost('nama')),
             deskripsi: $deskripsi !== '' ? $deskripsi : null,
             icon: trim((string) $this->request->getPost('icon')),

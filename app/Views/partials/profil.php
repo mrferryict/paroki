@@ -39,6 +39,13 @@
                              x-html="iconSvg(bidang.icon)"></div>
                         <h4 class="mt-4 font-display text-xl font-semibold text-maroon" x-text="bidang.nama"></h4>
                         <p class="mt-2 text-sm leading-relaxed text-stone-600" x-text="bidang.deskripsi"></p>
+                        <template x-if="bidang.penjabat && bidang.penjabat.length > 0">
+                            <ul class="mt-4 space-y-1 border-t border-gold/10 pt-3 text-sm text-stone-600">
+                                <template x-for="pj in bidang.penjabat" :key="pj.id">
+                                    <li x-text="pj.nama"></li>
+                                </template>
+                            </ul>
+                        </template>
                     </article>
                 </template>
             </div>
@@ -63,7 +70,7 @@
                             <div>
                                 <p class="font-display text-lg font-semibold text-maroon" x-text="wilayah.nama"></p>
                                 <p class="mt-0.5 text-sm text-stone-500">
-                                    Ketua: <span x-text="wilayah.ketuaNama"></span>
+                                    Koordinator: <span x-text="wilayah.ketuaNama"></span>
                                     · <span x-text="wilayah.lingkungan.length"></span> lingkungan
                                 </p>
                             </div>

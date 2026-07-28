@@ -10,12 +10,13 @@
             <div>
                 <p class="text-sm font-semibold uppercase tracking-wide text-gold">Navigasi</p>
                 <ul class="mt-4 space-y-2 text-sm">
-                    <li><a href="#profil" class="hover:text-ivory transition-colors">Profil Paroki</a></li>
-                    <li><a href="#jadwal" class="hover:text-ivory transition-colors">Jadwal Misa</a></li>
-                    <li><a href="#sakramen" class="hover:text-ivory transition-colors">Sakramen & Layanan</a></li>
-                    <li><a href="#berita" class="hover:text-ivory transition-colors">Berita & Kegiatan</a></li>
-                    <li><a href="#katekese" class="hover:text-ivory transition-colors">Katekese & Renungan</a></li>
-                    <li><a href="#formulir" class="hover:text-ivory transition-colors">Formulir</a></li>
+                    <li><a href="<?= site_url('/#profil') ?>" class="hover:text-ivory transition-colors">Profil Paroki</a></li>
+                    <li><a href="<?= site_url('/#jadwal') ?>" class="hover:text-ivory transition-colors">Jadwal Misa</a></li>
+                    <li><a href="<?= site_url('/#layanan') ?>" class="hover:text-ivory transition-colors">Layanan Paroki</a></li>
+                    <li><a href="<?= site_url('berita') ?>" class="hover:text-ivory transition-colors">Berita & Kegiatan</a></li>
+                    <li><a href="<?= site_url('katekese') ?>" class="hover:text-ivory transition-colors">Katekese & Renungan</a></li>
+                    <li><a href="<?= site_url('galeri') ?>" class="hover:text-ivory transition-colors">Galeri</a></li>
+                    <li><a href="<?= site_url('unduhan') ?>" class="hover:text-ivory transition-colors">Unduhan</a></li>
                 </ul>
             </div>
             <div>
@@ -23,6 +24,8 @@
                 <ul class="mt-4 space-y-2 text-sm">
                     <li><a href="<?= site_url('berita') ?>" class="hover:text-ivory transition-colors">Arsip Berita</a></li>
                     <li><a href="<?= site_url('katekese') ?>" class="hover:text-ivory transition-colors">Arsip Katekese</a></li>
+                    <li><a href="<?= site_url('galeri') ?>" class="hover:text-ivory transition-colors">Galeri</a></li>
+                    <li><a href="<?= site_url('unduhan') ?>" class="hover:text-ivory transition-colors">Arsip Unduhan</a></li>
                     <li><a href="<?= site_url('login') ?>" class="hover:text-ivory transition-colors">Login Admin</a></li>
                 </ul>
             </div>

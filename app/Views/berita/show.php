@@ -22,6 +22,17 @@
                 <?php endif ?>
             </div>
 
+            <?php if (($detail['tags'] ?? []) !== []): ?>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <?php foreach ($detail['tags'] as $tag): ?>
+                        <a href="<?= esc(site_url('berita?tag=' . urlencode($tag))) ?>"
+                           class="rounded-full bg-gold/15 px-3 py-1 text-xs font-medium text-maroon hover:bg-gold/25 transition-colors">
+                            #<?= esc($tag) ?>
+                        </a>
+                    <?php endforeach ?>
+                </div>
+            <?php endif ?>
+
             <h1 class="mt-4 font-display text-3xl font-semibold text-maroon lg:text-4xl">
                 <?= esc($detail['judul']) ?>
             </h1>

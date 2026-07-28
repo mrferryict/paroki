@@ -153,10 +153,11 @@ class BeritaController extends BaseController
             'judul'          => 'required|min_length[3]|max_length[255]',
             'kategori'       => 'required|in_list[pengumuman,kegiatan_paroki,pelayanan_sosial,kegiatan_wilayah,liturgi]',
             'ringkasan'      => 'permit_empty|max_length[2000]',
+            'tags'           => 'permit_empty|max_length[500]',
             'konten'         => 'permit_empty',
             'status'         => 'required|in_list[draft,terbit]',
             'tanggal_terbit' => 'permit_empty|valid_date[Y-m-d\TH:i]',
-            'gambar_utama'   => 'uploaded[gambar_utama]|max_size[gambar_utama,5120]|mime_in[gambar_utama,image/jpg,image/jpeg,image/png,image/webp]',
+            'gambar_utama'   => 'uploaded[gambar_utama]|max_size[gambar_utama,2048]|ext_in[gambar_utama,jpg,jpeg,png,webp]',
         ];
     }
 
@@ -169,10 +170,11 @@ class BeritaController extends BaseController
             'judul'          => 'required|min_length[3]|max_length[255]',
             'kategori'       => 'required|in_list[pengumuman,kegiatan_paroki,pelayanan_sosial,kegiatan_wilayah,liturgi]',
             'ringkasan'      => 'permit_empty|max_length[2000]',
+            'tags'           => 'permit_empty|max_length[500]',
             'konten'         => 'permit_empty',
             'status'         => 'required|in_list[draft,terbit]',
             'tanggal_terbit' => 'permit_empty|valid_date[Y-m-d\TH:i]',
-            'gambar_utama'   => 'if_exist|max_size[gambar_utama,5120]|mime_in[gambar_utama,image/jpg,image/jpeg,image/png,image/webp]',
+            'gambar_utama'   => 'if_exist|max_size[gambar_utama,2048]|ext_in[gambar_utama,jpg,jpeg,png,webp]',
         ];
     }
 
@@ -203,6 +205,7 @@ class BeritaController extends BaseController
             status: $status,
             tanggalTerbitRaw: $this->nullablePost('tanggal_terbit'),
             gambarUtama: $gambarUtama,
+            tagsRaw: $this->nullablePost('tags'),
             excludeId: $excludeId,
         );
     }
@@ -234,7 +237,13 @@ class BeritaController extends BaseController
 
     private function formErrorResponse(string $message): string
     {
-        return view('admin/berita/partials/form_error', ['message' => $message]);
+        return view('admin/berita/partials/form', [
+            'item'            => $this->requestFromOldInput(),
+            'action'          => $this->resolveFormAction(),
+            'kategoriOptions' => $this->beritaService->kategoriOptions(),
+            'statusOptions'   => $this->beritaService->statusOptions(),
+            'errorMessage'    => $message,
+        ]);
     }
 
     private function listErrorResponse(string $message): string
@@ -258,6 +267,7 @@ class BeritaController extends BaseController
         $item->judul      = (string) $this->request->getPost('judul');
         $item->kategori   = (string) $this->request->getPost('kategori');
         $item->ringkasan  = $this->nullablePost('ringkasan');
+        $item->tags       = $this->nullablePost('tags');
         $item->konten     = $this->nullablePost('konten');
         $item->status     = (string) $this->request->getPost('status');
         $item->gambar_utama = (string) ($this->request->getPost('gambar_existing') ?? '');

@@ -13,8 +13,11 @@ $routes->get('berita', 'BeritaController::index', ['as' => 'berita.index']);
 $routes->get('katekese/(:segment)/(:segment)', 'KatekeseController::show/$1/$2', ['as' => 'katekese.show']);
 $routes->get('katekese/(:segment)', 'KatekeseController::index/$1', ['as' => 'katekese.kategori']);
 $routes->get('katekese', 'KatekeseController::index', ['as' => 'katekese.index']);
+$routes->get('galeri/(:segment)', 'GaleriController::show/$1', ['as' => 'galeri.show']);
+$routes->get('galeri', 'GaleriController::index', ['as' => 'galeri.index']);
 
-// Unduhan dokumen terkontrol — CONTEXT.md §5 / §4.8
+// Unduhan publik & download terkontrol — CONTEXT.md §5 / §4.8
+$routes->get('unduhan', 'UnduhanController::index', ['as' => 'unduhan.index']);
 $routes->get('dokumen/(:num)/unduh', 'DokumenController::download/$1', ['as' => 'dokumen.download']);
 
 // Formulir publik — HTMX partial response (CONTEXT.md §5 / §4.5)
@@ -40,6 +43,10 @@ $routes->group('admin', ['filter' => ['session', 'group:admin']], static functio
     $routes->post('hero-slide/(:num)/move-up', 'Admin\HeroSlideController::moveUp/$1', ['as' => 'admin.hero-slide.move-up']);
     $routes->post('hero-slide/(:num)/move-down', 'Admin\HeroSlideController::moveDown/$1', ['as' => 'admin.hero-slide.move-down']);
 
+    $routes->get('pengaturan', 'Admin\PengaturanController::index', ['as' => 'admin.pengaturan.index']);
+    $routes->post('pengaturan/logo', 'Admin\PengaturanController::updateLogo', ['as' => 'admin.pengaturan.logo']);
+    $routes->post('pengaturan/logo/hapus', 'Admin\PengaturanController::removeLogo', ['as' => 'admin.pengaturan.logo.remove']);
+
     $routes->get('dewan-paroki', 'Admin\DewanParokiBidangController::index', ['as' => 'admin.dewan-paroki.index']);
     $routes->get('dewan-paroki/new', 'Admin\DewanParokiBidangController::new', ['as' => 'admin.dewan-paroki.new']);
     $routes->post('dewan-paroki', 'Admin\DewanParokiBidangController::create', ['as' => 'admin.dewan-paroki.create']);
@@ -48,6 +55,11 @@ $routes->group('admin', ['filter' => ['session', 'group:admin']], static functio
     $routes->post('dewan-paroki/(:num)/delete', 'Admin\DewanParokiBidangController::delete/$1', ['as' => 'admin.dewan-paroki.delete']);
     $routes->post('dewan-paroki/(:num)/move-up', 'Admin\DewanParokiBidangController::moveUp/$1', ['as' => 'admin.dewan-paroki.move-up']);
     $routes->post('dewan-paroki/(:num)/move-down', 'Admin\DewanParokiBidangController::moveDown/$1', ['as' => 'admin.dewan-paroki.move-down']);
+    $routes->get('dewan-paroki/(:num)/penjabat/new', 'Admin\DewanParokiPenjabatController::new/$1', ['as' => 'admin.dewan-paroki.penjabat.new']);
+    $routes->post('dewan-paroki/(:num)/penjabat', 'Admin\DewanParokiPenjabatController::create/$1', ['as' => 'admin.dewan-paroki.penjabat.create']);
+    $routes->get('dewan-paroki/(:num)/penjabat/(:num)/edit', 'Admin\DewanParokiPenjabatController::edit/$1/$2', ['as' => 'admin.dewan-paroki.penjabat.edit']);
+    $routes->post('dewan-paroki/(:num)/penjabat/(:num)', 'Admin\DewanParokiPenjabatController::update/$1/$2', ['as' => 'admin.dewan-paroki.penjabat.update']);
+    $routes->post('dewan-paroki/(:num)/penjabat/(:num)/delete', 'Admin\DewanParokiPenjabatController::delete/$1/$2', ['as' => 'admin.dewan-paroki.penjabat.delete']);
 
     $routes->get('sakramen-jenis', 'Admin\SakramenJenisController::index', ['as' => 'admin.sakramen-jenis.index']);
     $routes->get('sakramen-jenis/new', 'Admin\SakramenJenisController::new', ['as' => 'admin.sakramen-jenis.new']);
@@ -100,13 +112,34 @@ $routes->group('admin', ['filter' => ['session', 'group:admin']], static functio
     $routes->post('artikel/(:num)/delete', 'Admin\ArtikelController::delete/$1', ['as' => 'admin.artikel.delete']);
 
     $routes->get('galeri', 'Admin\GaleriController::index', ['as' => 'admin.galeri.index']);
-    $routes->get('galeri/new', 'Admin\GaleriController::new', ['as' => 'admin.galeri.new']);
-    $routes->post('galeri', 'Admin\GaleriController::create', ['as' => 'admin.galeri.create']);
-    $routes->get('galeri/(:num)/edit', 'Admin\GaleriController::edit/$1', ['as' => 'admin.galeri.edit']);
-    $routes->post('galeri/(:num)', 'Admin\GaleriController::update/$1', ['as' => 'admin.galeri.update']);
-    $routes->post('galeri/(:num)/delete', 'Admin\GaleriController::delete/$1', ['as' => 'admin.galeri.delete']);
-    $routes->post('galeri/(:num)/move-up', 'Admin\GaleriController::moveUp/$1', ['as' => 'admin.galeri.move-up']);
-    $routes->post('galeri/(:num)/move-down', 'Admin\GaleriController::moveDown/$1', ['as' => 'admin.galeri.move-down']);
+    $routes->get('galeri/event/new', 'Admin\GaleriController::newEvent', ['as' => 'admin.galeri.event.new']);
+    $routes->post('galeri/event', 'Admin\GaleriController::createEvent', ['as' => 'admin.galeri.event.create']);
+    $routes->get('galeri/event/(:num)/edit', 'Admin\GaleriController::editEvent/$1', ['as' => 'admin.galeri.event.edit']);
+    $routes->post('galeri/event/(:num)', 'Admin\GaleriController::updateEvent/$1', ['as' => 'admin.galeri.event.update']);
+    $routes->post('galeri/event/(:num)/delete', 'Admin\GaleriController::deleteEvent/$1', ['as' => 'admin.galeri.event.delete']);
+    $routes->post('galeri/event/(:num)/move-up', 'Admin\GaleriController::moveEventUp/$1', ['as' => 'admin.galeri.event.move-up']);
+    $routes->post('galeri/event/(:num)/move-down', 'Admin\GaleriController::moveEventDown/$1', ['as' => 'admin.galeri.event.move-down']);
+    $routes->get('galeri/(:num)/item/new', 'Admin\GaleriController::newItem/$1', ['as' => 'admin.galeri.item.new']);
+    $routes->post('galeri/(:num)/item', 'Admin\GaleriController::createItem/$1', ['as' => 'admin.galeri.item.create']);
+    $routes->get('galeri/(:num)/item/(:num)/edit', 'Admin\GaleriController::editItem/$1/$2', ['as' => 'admin.galeri.item.edit']);
+    $routes->post('galeri/(:num)/item/(:num)', 'Admin\GaleriController::updateItem/$1/$2', ['as' => 'admin.galeri.item.update']);
+    $routes->post('galeri/(:num)/item/(:num)/delete', 'Admin\GaleriController::deleteItem/$1/$2', ['as' => 'admin.galeri.item.delete']);
+    $routes->post('galeri/(:num)/item/(:num)/move-up', 'Admin\GaleriController::moveItemUp/$1/$2', ['as' => 'admin.galeri.item.move-up']);
+    $routes->post('galeri/(:num)/item/(:num)/move-down', 'Admin\GaleriController::moveItemDown/$1/$2', ['as' => 'admin.galeri.item.move-down']);
+
+    $routes->get('katekese-kategori', 'Admin\KatekeseKategoriController::index', ['as' => 'admin.katekese-kategori.index']);
+    $routes->get('katekese-kategori/new', 'Admin\KatekeseKategoriController::new', ['as' => 'admin.katekese-kategori.new']);
+    $routes->post('katekese-kategori', 'Admin\KatekeseKategoriController::create', ['as' => 'admin.katekese-kategori.create']);
+    $routes->get('katekese-kategori/(:num)/edit', 'Admin\KatekeseKategoriController::edit/$1', ['as' => 'admin.katekese-kategori.edit']);
+    $routes->post('katekese-kategori/(:num)', 'Admin\KatekeseKategoriController::update/$1', ['as' => 'admin.katekese-kategori.update']);
+    $routes->post('katekese-kategori/(:num)/delete', 'Admin\KatekeseKategoriController::delete/$1', ['as' => 'admin.katekese-kategori.delete']);
+
+    $routes->get('unduhan-kategori', 'Admin\UnduhanKategoriController::index', ['as' => 'admin.unduhan-kategori.index']);
+    $routes->get('unduhan-kategori/new', 'Admin\UnduhanKategoriController::new', ['as' => 'admin.unduhan-kategori.new']);
+    $routes->post('unduhan-kategori', 'Admin\UnduhanKategoriController::create', ['as' => 'admin.unduhan-kategori.create']);
+    $routes->get('unduhan-kategori/(:num)/edit', 'Admin\UnduhanKategoriController::edit/$1', ['as' => 'admin.unduhan-kategori.edit']);
+    $routes->post('unduhan-kategori/(:num)', 'Admin\UnduhanKategoriController::update/$1', ['as' => 'admin.unduhan-kategori.update']);
+    $routes->post('unduhan-kategori/(:num)/delete', 'Admin\UnduhanKategoriController::delete/$1', ['as' => 'admin.unduhan-kategori.delete']);
 
     $routes->get('dokumen', 'Admin\DokumenController::index', ['as' => 'admin.dokumen.index']);
     $routes->get('dokumen/new', 'Admin\DokumenController::new', ['as' => 'admin.dokumen.new']);

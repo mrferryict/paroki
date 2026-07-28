@@ -15,13 +15,21 @@ if ($tanggalValue === null && $item !== null && $item->tanggal_terbit) {
 <div>
     <h2 class="mb-4 font-display text-xl font-semibold text-maroon"><?= $isEdit ? 'Edit Berita' : 'Tambah Berita' ?></h2>
 
+    <?php if (isset($errorMessage) && $errorMessage !== ''): ?>
+        <div class="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"><?= esc($errorMessage) ?></div>
+    <?php endif ?>
+
     <?php if (isset($validation) && $validation->getErrors() !== []): ?>
         <div class="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
             <ul class="list-disc pl-4"><?php foreach ($validation->getErrors() as $error): ?><li><?= esc($error) ?></li><?php endforeach ?></ul>
         </div>
     <?php endif ?>
 
-    <form hx-post="<?= esc($action) ?>" hx-target="#berita-form-panel" hx-swap="innerHTML" enctype="multipart/form-data" hx-encoding="multipart/form-data" class="space-y-4">
+    <form hx-post="<?= esc($action) ?>"
+          hx-target="#berita-form-panel"
+          hx-swap="innerHTML"
+          hx-encoding="multipart/form-data"
+          class="space-y-4">
         <?= csrf_field() ?>
         <?php if ($isEdit): ?>
             <input type="hidden" name="id" value="<?= esc((string) $item->id) ?>">
@@ -61,6 +69,15 @@ if ($tanggalValue === null && $item !== null && $item->tanggal_terbit) {
         </div>
 
         <div>
+            <label for="tags" class="mb-1 block text-sm font-medium">Tag</label>
+            <input type="text" name="tags" id="tags"
+                   placeholder="Mis. natal, kegiatan, paroki"
+                   value="<?= esc(old('tags', (string) ($item->tags ?? ''))) ?>"
+                   class="w-full rounded border border-stone-300 px-3 py-2 text-sm">
+            <p class="mt-1 text-xs text-stone-500">Pisahkan dengan koma. Digunakan untuk pencarian di halaman berita.</p>
+        </div>
+
+        <div>
             <label for="ringkasan" class="mb-1 block text-sm font-medium">Ringkasan</label>
             <textarea name="ringkasan" id="ringkasan" rows="2" class="w-full rounded border border-stone-300 px-3 py-2 text-sm"><?= esc(old('ringkasan', (string) ($item->ringkasan ?? ''))) ?></textarea>
         </div>
@@ -77,6 +94,7 @@ if ($tanggalValue === null && $item !== null && $item->tanggal_terbit) {
             <?php endif ?>
             <input type="file" name="gambar_utama" id="gambar_utama" accept="image/jpeg,image/png,image/webp"
                    <?= $isEdit ? '' : 'required' ?> class="w-full text-sm">
+            <p class="mt-1 text-xs text-stone-500">JPEG, PNG, atau WebP. Maks. 2 MB.</p>
         </div>
 
         <div class="flex gap-2 pt-2">

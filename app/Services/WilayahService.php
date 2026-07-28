@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\DTOs\Wilayah\LingkunganAdminRowDto;
+use App\DTOs\Wilayah\WilayahAdminRowDto;
 use App\DTOs\Wilayah\WilayahDetailDto;
 use App\DTOs\Wilayah\WilayahDto;
 use App\DTOs\Wilayah\WilayahWithLingkunganDto;
+use App\Entities\Lingkungan;
 use App\Entities\Wilayah;
 use App\Libraries\PiiCipher;
 use App\Repositories\WilayahRepository;
@@ -29,6 +32,63 @@ class WilayahService
         return $this->wilayahRepository->findAllForList();
     }
 
+    /**
+     * @return list<WilayahAdminRowDto>
+     */
+    public function findAllForAdminTable(): array
+    {
+        $wilayahList = $this->wilayahRepository->findAllForAdminMaster();
+
+        if ($wilayahList === []) {
+            return [];
+        }
+
+        $wilayahIds = array_map(static fn (Wilayah $wilayah): int => (int) $wilayah->id, $wilayahList);
+        $lingkungan = $this->wilayahRepository->findLingkunganForAdminByWilayahIds($wilayahIds);
+
+        /** @var array<int, list<LingkunganAdminRowDto>> $lingkunganByWilayah */
+        $lingkunganByWilayah = [];
+
+        foreach ($lingkungan as $item) {
+            $kontak = null;
+
+            if ($item->ketua_kontak_cipher !== null && $item->ketua_kontak_cipher !== '') {
+                $kontak = $this->piiCipher->decrypt((string) $item->ketua_kontak_cipher);
+            }
+
+            $wilayahId = (int) $item->wilayah_id;
+            $lingkunganByWilayah[$wilayahId][] = new LingkunganAdminRowDto(
+                id: (int) $item->id,
+                wilayahId: $wilayahId,
+                nama: (string) ($item->nama ?? ''),
+                ketuaNama: (string) ($item->ketua_nama ?? ''),
+                ketuaKontak: $kontak !== null && $kontak !== '' ? $kontak : null,
+            );
+        }
+
+        $rows = [];
+
+        foreach ($wilayahList as $wilayah) {
+            $kontak = $this->piiCipher->decrypt((string) $wilayah->ketua_kontak_cipher);
+
+            if ($kontak === null || $kontak === '') {
+                throw new RuntimeException('Kontak koordinator wilayah tidak dapat didekripsi.');
+            }
+
+            $wilayahId = (int) $wilayah->id;
+
+            $rows[] = new WilayahAdminRowDto(
+                id: $wilayahId,
+                nama: (string) ($wilayah->nama ?? ''),
+                koordinatorNama: (string) ($wilayah->ketua_nama ?? ''),
+                koordinatorKontak: $kontak,
+                lingkungan: $lingkunganByWilayah[$wilayahId] ?? [],
+            );
+        }
+
+        return $rows;
+    }
+
     public function getDetail(int $id): WilayahDetailDto
     {
         $wilayah = $this->wilayahRepository->findForDetail($id);
@@ -40,7 +100,7 @@ class WilayahService
         $kontak = $this->piiCipher->decrypt((string) $wilayah->ketua_kontak_cipher);
 
         if ($kontak === null || $kontak === '') {
-            throw new RuntimeException('Kontak ketua wilayah tidak dapat didekripsi.');
+            throw new RuntimeException('Kontak koordinator wilayah tidak dapat didekripsi.');
         }
 
         return new WilayahDetailDto(
@@ -132,7 +192,7 @@ class WilayahService
         $kontak = trim($kontak);
 
         if ($kontak === '') {
-            throw new InvalidArgumentException('Nomor kontak ketua wajib diisi.');
+            throw new InvalidArgumentException('Nomor kontak koordinator wajib diisi.');
         }
 
         return [
@@ -154,7 +214,7 @@ class WilayahService
 
         if ($newKontak === '') {
             if ($required) {
-                throw new InvalidArgumentException('Nomor kontak ketua wajib diisi.');
+                throw new InvalidArgumentException('Nomor kontak koordinator wajib diisi.');
             }
 
             return [

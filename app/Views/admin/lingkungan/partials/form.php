@@ -11,7 +11,7 @@
         </div>
     <?php endif ?>
 
-    <form hx-post="<?= esc($action) ?>" hx-target="#lingkungan-form-panel" hx-swap="innerHTML" class="space-y-4">
+    <form hx-post="<?= esc($action) ?>" hx-target="#wilayah-form-panel" hx-swap="innerHTML" class="space-y-4">
         <?= csrf_field() ?>
         <?php if ($isEdit): ?><input type="hidden" name="id" value="<?= esc((string) $item->id) ?>"><?php endif ?>
 
@@ -30,20 +30,20 @@
         </div>
 
         <div>
-            <label for="ketua_kontak" class="mb-1 block text-sm font-medium">Nomor Kontak Ketua</label>
+            <label for="ketua_kontak" class="mb-1 block text-sm font-medium">No. WA Ketua</label>
             <input type="tel" name="ketua_kontak" id="ketua_kontak"
                    placeholder="<?= $isEdit ? 'Kosongkan jika tidak diubah' : 'Opsional' ?>"
                    value="<?= esc(old('ketua_kontak', '')) ?>"
                    class="w-full rounded border border-stone-300 px-3 py-2 text-sm">
             <?php if ($isEdit): ?>
-                <p class="mt-1 text-xs text-stone-500">Nomor saat ini hanya tampil di halaman detail.</p>
+                <p class="mt-1 text-xs text-stone-500">Kosongkan jika nomor tidak diubah.</p>
             <?php endif ?>
         </div>
 
         <div class="flex gap-2 pt-2">
             <button type="submit" class="rounded bg-maroon px-4 py-2 text-sm font-medium text-ivory hover:bg-maroon/90">Simpan</button>
             <button type="button" class="rounded border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50"
-                    onclick="document.getElementById('lingkungan-form-panel').innerHTML = '<p class=\'text-sm text-stone-500\'>Form dibatalkan.</p>'">Batal</button>
+                    onclick="document.getElementById('wilayah-form-panel').innerHTML = '<p class=\'text-sm text-stone-500\'>Form dibatalkan.</p>'">Batal</button>
         </div>
     </form>
 </div>

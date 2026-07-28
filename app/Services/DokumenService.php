@@ -30,6 +30,7 @@ class DokumenService
 
     public function __construct(
         private readonly DokumenModel $dokumenModel,
+        private readonly DokumenKategoriService $dokumenKategoriService,
     ) {}
 
     /**
@@ -39,10 +40,75 @@ class DokumenService
     {
         /** @var list<Dokumen> */
         return $this->dokumenModel
-            ->select('id, nama, kategori, created_at, updated_at')
+            ->select('id, nama, kategori, download_count, created_at, updated_at')
             ->orderBy('kategori', 'ASC')
             ->orderBy('nama', 'ASC')
             ->findAll();
+    }
+
+    /**
+     * @return list<Dokumen>
+     */
+    public function findAllForPublic(?string $kategori = null): array
+    {
+        $activeSlugs = $this->dokumenKategoriService->activeSlugList();
+
+        if ($activeSlugs === []) {
+            return [];
+        }
+
+        $builder = $this->dokumenModel
+            ->select('id, nama, kategori, created_at, updated_at')
+            ->whereIn('kategori', $activeSlugs)
+            ->orderBy('kategori', 'ASC')
+            ->orderBy('nama', 'ASC');
+
+        if ($kategori !== null && $kategori !== '') {
+            $builder->where('kategori', $kategori);
+        }
+
+        /** @var list<Dokumen> */
+        return $builder->findAll();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function kategoriOptions(): array
+    {
+        return $this->dokumenKategoriService->kategoriOptions();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function kategoriOptionsForAdmin(?string $currentSlug = null): array
+    {
+        return $this->dokumenKategoriService->kategoriOptionsForAdmin($currentSlug);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function allKategoriLabels(): array
+    {
+        return $this->dokumenKategoriService->allKategoriLabels();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function mapForPublic(Dokumen $item): array
+    {
+        $slug = (string) ($item->kategori ?? '');
+
+        return [
+            'id'            => (int) $item->id,
+            'nama'          => (string) ($item->nama ?? ''),
+            'kategori'      => $slug,
+            'kategoriLabel' => $this->dokumenKategoriService->getLabelForSlug($slug) ?? $slug,
+            'downloadUrl'   => $this->publicDownloadUrl((int) $item->id),
+        ];
     }
 
     public function findById(int $id): Dokumen
@@ -50,7 +116,7 @@ class DokumenService
         $item = $this->dokumenModel->find($id);
 
         if ($item === null) {
-            throw new DomainException('Dokumen tidak ditemukan.');
+            throw new DomainException('Unduhan tidak ditemukan.');
         }
 
         return $item;
@@ -58,10 +124,14 @@ class DokumenService
 
     public function create(DokumenDto $dto): int
     {
+        if (! in_array($dto->kategori, $this->dokumenKategoriService->activeSlugList(), true)) {
+            throw new InvalidArgumentException('Kategori unduhan tidak valid atau tidak aktif.');
+        }
+
         $id = $this->dokumenModel->insert($dto->toModelData());
 
         if ($id === false) {
-            throw new RuntimeException('Gagal menyimpan dokumen.');
+            throw new RuntimeException('Gagal menyimpan unduhan.');
         }
 
         return (int) $id;
@@ -70,11 +140,17 @@ class DokumenService
     public function update(int $id, DokumenDto $dto): void
     {
         $existing = $this->findById($id);
-        $oldPath  = (string) $existing->file_path;
+        $allowed  = $this->dokumenKategoriService->kategoriOptionsForAdmin((string) ($existing->kategori ?? ''));
+
+        if (! array_key_exists($dto->kategori, $allowed)) {
+            throw new InvalidArgumentException('Kategori unduhan tidak valid.');
+        }
 
         if (! $this->dokumenModel->update($id, $dto->toModelData())) {
-            throw new RuntimeException('Gagal memperbarui dokumen.');
+            throw new RuntimeException('Gagal memperbarui unduhan.');
         }
+
+        $oldPath = (string) $existing->file_path;
 
         if ($oldPath !== '' && $oldPath !== $dto->filePath) {
             $this->removeStoredFile($oldPath);
@@ -86,7 +162,7 @@ class DokumenService
         $existing = $this->findById($id);
 
         if (! $this->dokumenModel->delete($id)) {
-            throw new RuntimeException('Gagal menghapus dokumen.');
+            throw new RuntimeException('Gagal menghapus unduhan.');
         }
 
         $this->removeStoredFile((string) $existing->file_path);
@@ -95,13 +171,21 @@ class DokumenService
     public function resolveDownload(int $id): DokumenDownloadDto
     {
         $dokumen = $this->findById($id);
+        $slug    = (string) ($dokumen->kategori ?? '');
+
+        if (! $this->dokumenKategoriService->isActiveSlug($slug)) {
+            throw new DomainException('Unduhan tidak tersedia.');
+        }
+
         $fullPath = $this->fullPathFromRelative((string) $dokumen->file_path);
 
         if (! is_file($fullPath)) {
-            throw new DomainException('Berkas dokumen tidak ditemukan di server.');
+            throw new DomainException('Berkas unduhan tidak ditemukan di server.');
         }
 
-        $extension = pathinfo($fullPath, PATHINFO_EXTENSION);
+        $this->incrementDownloadCount($id);
+
+        $extension  = pathinfo($fullPath, PATHINFO_EXTENSION);
         $clientName = (string) $dokumen->nama;
 
         if ($extension !== '' && ! str_ends_with(strtolower($clientName), '.' . strtolower($extension))) {
@@ -114,10 +198,18 @@ class DokumenService
         );
     }
 
+    public function incrementDownloadCount(int $id): void
+    {
+        $this->dokumenModel
+            ->where('id', $id)
+            ->set('download_count', 'download_count + 1', false)
+            ->update();
+    }
+
     public function storeUploadedFile(UploadedFile $file): string
     {
         if (! $file->isValid()) {
-            throw new InvalidArgumentException($file->getErrorString() ?: 'File dokumen tidak valid.');
+            throw new InvalidArgumentException($file->getErrorString() ?: 'File unduhan tidak valid.');
         }
 
         $mime = $file->getMimeType();
@@ -129,13 +221,13 @@ class DokumenService
         $targetDir = WRITEPATH . self::UPLOAD_SUBDIR;
 
         if (! is_dir($targetDir) && ! mkdir($targetDir, 0755, true) && ! is_dir($targetDir)) {
-            throw new RuntimeException('Direktori unggahan dokumen tidak dapat dibuat.');
+            throw new RuntimeException('Direktori unggahan unduhan tidak dapat dibuat.');
         }
 
         $storedName = $file->getRandomName();
 
         if (! $file->move($targetDir, $storedName)) {
-            throw new RuntimeException('Gagal mengunggah dokumen.');
+            throw new RuntimeException('Gagal mengunggah unduhan.');
         }
 
         return self::UPLOAD_SUBDIR . '/' . $storedName;

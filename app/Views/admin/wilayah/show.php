@@ -12,18 +12,18 @@
 
         <dl class="mt-6 grid gap-4 sm:grid-cols-2">
             <div>
-                <dt class="text-xs font-semibold uppercase tracking-wide text-stone-500">Ketua Wilayah</dt>
+                <dt class="text-xs font-semibold uppercase tracking-wide text-stone-500">Koordinator Wilayah</dt>
                 <dd class="mt-1 text-base text-stone-800"><?= esc($detail->wilayah->ketua_nama) ?></dd>
             </div>
             <div>
-                <dt class="text-xs font-semibold uppercase tracking-wide text-stone-500">Nomor Kontak</dt>
+                <dt class="text-xs font-semibold uppercase tracking-wide text-stone-500">No. WA Koordinator</dt>
                 <dd class="mt-1 font-mono text-base text-stone-800"><?= esc($detail->ketuaKontak) ?></dd>
             </div>
         </dl>
 
-        <div class="mt-6 flex flex-wrap gap-2">
-            <a href="<?= site_url('admin/wilayah/' . $detail->wilayah->id . '/lingkungan') ?>"
-               class="rounded bg-maroon px-4 py-2 text-sm font-medium text-ivory hover:bg-maroon/90">Kelola Lingkungan</a>
+        <div class="mt-6">
+            <a href="<?= site_url('admin/wilayah') ?>"
+               class="text-sm font-medium text-maroon hover:underline">&larr; Kembali ke daftar wilayah</a>
         </div>
     </div>
 

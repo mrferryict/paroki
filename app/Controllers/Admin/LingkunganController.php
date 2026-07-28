@@ -30,28 +30,9 @@ class LingkunganController extends BaseController
         $this->wilayahService    = service('wilayahService');
     }
 
-    public function index(int $wilayahId): string
+    public function index(int $wilayahId): ResponseInterface
     {
-        try {
-            $wilayahWithLingkungan = $this->wilayahService->getWithLingkungan($wilayahId);
-        } catch (DomainException) {
-            return view('admin/lingkungan/partials/list_error', [
-                'message' => 'Wilayah tidak ditemukan.',
-            ]);
-        }
-
-        if ($this->isHtmxRequest()) {
-            return view('admin/lingkungan/partials/list', [
-                'wilayah' => $wilayahWithLingkungan->wilayah,
-                'items'   => $wilayahWithLingkungan->lingkungan,
-            ]);
-        }
-
-        return view('admin/lingkungan/index', [
-            'wilayah' => $wilayahWithLingkungan->wilayah,
-            'items'   => $wilayahWithLingkungan->lingkungan,
-            'title'   => 'Lingkungan — ' . $wilayahWithLingkungan->wilayah->nama,
-        ]);
+        return redirect()->to(site_url('admin/wilayah'));
     }
 
     public function show(int $wilayahId, int $id): string
@@ -98,7 +79,7 @@ class LingkunganController extends BaseController
 
             session()->setFlashdata('success', 'Lingkungan berhasil ditambahkan.');
 
-            return $this->htmxRedirect(site_url('admin/wilayah/' . $wilayahId . '/lingkungan'));
+            return $this->htmxRedirect(site_url('admin/wilayah'));
         } catch (DomainException | RuntimeException $e) {
             return $this->formErrorResponse($e->getMessage());
         }
@@ -135,7 +116,7 @@ class LingkunganController extends BaseController
 
             session()->setFlashdata('success', 'Lingkungan berhasil diperbarui.');
 
-            return $this->htmxRedirect(site_url('admin/wilayah/' . $wilayahId . '/lingkungan'));
+            return $this->htmxRedirect(site_url('admin/wilayah'));
         } catch (DomainException | RuntimeException $e) {
             return $this->formErrorResponse($e->getMessage());
         }
@@ -148,11 +129,8 @@ class LingkunganController extends BaseController
 
             session()->setFlashdata('success', 'Lingkungan berhasil dihapus.');
 
-            $wilayah = $this->wilayahService->getWithLingkungan($wilayahId);
-
-            return view('admin/lingkungan/partials/list', [
-                'wilayah' => $wilayah->wilayah,
-                'items'   => $wilayah->lingkungan,
+            return view('admin/wilayah/partials/table', [
+                'rows' => $this->wilayahService->findAllForAdminTable(),
             ]);
         } catch (DomainException | RuntimeException $e) {
             return view('admin/lingkungan/partials/list_error', ['message' => $e->getMessage()]);

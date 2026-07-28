@@ -23,5 +23,6 @@ class DokumenModel extends Model
         'nama',
         'file_path',
         'kategori',
+        'download_count',
     ];
 }

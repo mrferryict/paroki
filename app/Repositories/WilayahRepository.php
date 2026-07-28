@@ -20,6 +20,39 @@ class WilayahRepository extends BaseRepository
     /**
      * @return list<Wilayah>
      */
+    public function findAllForAdminMaster(): array
+    {
+        /** @var list<Wilayah> */
+        return $this->model
+            ->select('id, nama, ketua_nama, ketua_kontak_cipher, ketua_kontak_hash, created_at, updated_at')
+            ->orderBy('nama', 'ASC')
+            ->findAll();
+    }
+
+    /**
+     * @param list<int> $wilayahIds
+     *
+     * @return list<Lingkungan>
+     */
+    public function findLingkunganForAdminByWilayahIds(array $wilayahIds): array
+    {
+        if ($wilayahIds === []) {
+            return [];
+        }
+
+        $lingkunganModel = model(LingkunganModel::class);
+
+        /** @var list<Lingkungan> */
+        return $lingkunganModel
+            ->select('id, wilayah_id, nama, ketua_nama, ketua_kontak_cipher, ketua_kontak_hash, created_at, updated_at')
+            ->whereIn('wilayah_id', $wilayahIds)
+            ->orderBy('nama', 'ASC')
+            ->findAll();
+    }
+
+    /**
+     * @return list<Wilayah>
+     */
     public function findAllForList(): array
     {
         /** @var list<Wilayah> */

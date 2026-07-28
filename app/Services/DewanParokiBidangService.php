@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\DTOs\DewanParokiBidang\DewanParokiBidangAdminRowDto;
 use App\DTOs\DewanParokiBidang\DewanParokiBidangDto;
+use App\DTOs\DewanParokiBidang\DewanParokiPenjabatAdminRowDto;
 use App\Entities\DewanParokiBidang;
+use App\Entities\DewanParokiPenjabat;
+use App\Libraries\PiiCipher;
 use App\Models\DewanParokiBidangModel;
+use App\Models\DewanParokiPenjabatModel;
 use DomainException;
 use RuntimeException;
 
@@ -14,6 +19,8 @@ class DewanParokiBidangService
 {
     public function __construct(
         private readonly DewanParokiBidangModel $dewanParokiBidangModel,
+        private readonly DewanParokiPenjabatModel $penjabatModel,
+        private readonly PiiCipher $piiCipher,
     ) {}
 
     /**
@@ -26,6 +33,111 @@ class DewanParokiBidangService
             ->orderBy('urutan', 'ASC')
             ->orderBy('id', 'ASC')
             ->findAll();
+    }
+
+    /**
+     * @return list<DewanParokiBidangAdminRowDto>
+     */
+    public function findAllForAdminTable(): array
+    {
+        $bidangList = $this->findAllOrdered();
+
+        if ($bidangList === []) {
+            return [];
+        }
+
+        $bidangIds = array_map(static fn (DewanParokiBidang $item): int => (int) $item->id, $bidangList);
+
+        /** @var list<DewanParokiPenjabat> $penjabatRows */
+        $penjabatRows = $this->penjabatModel
+            ->select('id, bidang_id, nama, whatsapp_cipher, urutan')
+            ->whereIn('bidang_id', $bidangIds)
+            ->orderBy('urutan', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->findAll();
+
+        /** @var array<int, list<DewanParokiPenjabatAdminRowDto>> $grouped */
+        $grouped = [];
+
+        foreach ($penjabatRows as $penjabat) {
+            $kontak = $this->piiCipher->decrypt((string) $penjabat->whatsapp_cipher);
+
+            if ($kontak === null || $kontak === '') {
+                throw new RuntimeException('Nomor WhatsApp penjabat tidak dapat didekripsi.');
+            }
+
+            $bidangId = (int) $penjabat->bidang_id;
+            $grouped[$bidangId][] = new DewanParokiPenjabatAdminRowDto(
+                id: (int) $penjabat->id,
+                nama: (string) ($penjabat->nama ?? ''),
+                whatsapp: $kontak,
+            );
+        }
+
+        $kodeOptions = $this->kodeOptions();
+        $rows        = [];
+
+        foreach ($bidangList as $bidang) {
+            $bidangId = (int) $bidang->id;
+
+            $rows[] = new DewanParokiBidangAdminRowDto(
+                id: $bidangId,
+                kode: (string) ($bidang->kode ?? ''),
+                kodeLabel: $kodeOptions[(string) ($bidang->kode ?? '')] ?? (string) ($bidang->kode ?? ''),
+                nama: (string) ($bidang->nama_tampilan ?? ''),
+                deskripsi: $bidang->deskripsi !== null ? (string) $bidang->deskripsi : null,
+                icon: (string) ($bidang->icon ?? ''),
+                urutan: (int) ($bidang->urutan ?? 0),
+                penjabat: $grouped[$bidangId] ?? [],
+            );
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function findAllForPublicWithPenjabat(): array
+    {
+        $bidangList = $this->findAllOrdered();
+
+        if ($bidangList === []) {
+            return [];
+        }
+
+        $bidangIds = array_map(static fn (DewanParokiBidang $item): int => (int) $item->id, $bidangList);
+
+        /** @var list<DewanParokiPenjabat> $penjabatRows */
+        $penjabatRows = $this->penjabatModel
+            ->select('id, bidang_id, nama, urutan')
+            ->whereIn('bidang_id', $bidangIds)
+            ->orderBy('urutan', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->findAll();
+
+        /** @var array<int, list<array{id: int, nama: string}>> $grouped */
+        $grouped = [];
+
+        foreach ($penjabatRows as $penjabat) {
+            $bidangId = (int) $penjabat->bidang_id;
+            $grouped[$bidangId][] = [
+                'id'   => (int) $penjabat->id,
+                'nama' => (string) ($penjabat->nama ?? ''),
+            ];
+        }
+
+        return array_map(static function (DewanParokiBidang $bidang) use ($grouped): array {
+            $bidangId = (int) $bidang->id;
+
+            return [
+                'kode'      => (string) ($bidang->kode ?? ''),
+                'nama'      => (string) ($bidang->nama_tampilan ?? ''),
+                'deskripsi' => (string) ($bidang->deskripsi ?? ''),
+                'icon'      => (string) ($bidang->icon ?? ''),
+                'penjabat'  => $grouped[$bidangId] ?? [],
+            ];
+        }, $bidangList);
     }
 
     public function findById(int $id): DewanParokiBidang

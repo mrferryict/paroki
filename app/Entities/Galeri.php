@@ -9,9 +9,10 @@ use CodeIgniter\Entity\Entity;
 class Galeri extends Entity
 {
     protected $casts = [
-        'id'     => 'integer',
-        'urutan' => 'integer',
+        'id'              => 'integer',
+        'galeri_event_id' => 'integer',
+        'urutan'          => 'integer',
     ];
 
-    protected $dates = ['created_at'];
+    protected $dates = ['created_at', 'updated_at', 'deleted_at'];
 }

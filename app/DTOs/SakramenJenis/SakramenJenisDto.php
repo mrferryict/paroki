@@ -8,6 +8,7 @@ readonly class SakramenJenisDto
 {
     public function __construct(
         public string $kode,
+        public string $grup,
         public string $nama,
         public ?string $deskripsi,
         public string $icon,
@@ -22,6 +23,7 @@ readonly class SakramenJenisDto
     {
         return [
             'kode'      => $this->kode,
+            'grup'      => $this->grup,
             'nama'      => $this->nama,
             'deskripsi' => $this->deskripsi,
             'icon'      => $this->icon,

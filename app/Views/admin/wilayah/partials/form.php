@@ -21,7 +21,7 @@
         </div>
 
         <div>
-            <label for="ketua_nama" class="mb-1 block text-sm font-medium">Nama Ketua <span class="text-red-600">*</span></label>
+            <label for="ketua_nama" class="mb-1 block text-sm font-medium">Nama Koordinator <span class="text-red-600">*</span></label>
             <input type="text" name="ketua_nama" id="ketua_nama" required
                    value="<?= esc(old('ketua_nama', (string) ($item->ketua_nama ?? ''))) ?>"
                    class="w-full rounded border border-stone-300 px-3 py-2 text-sm">
@@ -29,14 +29,14 @@
 
         <div>
             <label for="ketua_kontak" class="mb-1 block text-sm font-medium">
-                Nomor Kontak Ketua <?= $isEdit ? '' : '<span class="text-red-600">*</span>' ?>
+                No. WA Koordinator <?= $isEdit ? '' : '<span class="text-red-600">*</span>' ?>
             </label>
             <input type="tel" name="ketua_kontak" id="ketua_kontak" <?= $isEdit ? '' : 'required' ?>
                    placeholder="<?= $isEdit ? 'Kosongkan jika tidak diubah' : '081234567890' ?>"
                    value="<?= esc(old('ketua_kontak', '')) ?>"
                    class="w-full rounded border border-stone-300 px-3 py-2 text-sm">
             <?php if ($isEdit): ?>
-                <p class="mt-1 text-xs text-stone-500">Nomor saat ini hanya tampil di halaman detail.</p>
+                <p class="mt-1 text-xs text-stone-500">Kosongkan jika nomor tidak diubah.</p>
             <?php endif ?>
         </div>
 

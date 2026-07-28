@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\DTOs\Artikel\ArtikelDto;
 use App\DTOs\Shared\ContentListFilterDto;
 use App\Entities\Artikel;
-use App\Enums\ArtikelKategori;
 use App\Enums\PublishStatus;
+use App\Services\ArtikelKategoriService;
 use App\Services\ArtikelService;
 use CodeIgniter\HTTP\ResponseInterface;
 use DomainException;
@@ -20,6 +19,8 @@ class ArtikelController extends BaseController
 {
     private ArtikelService $artikelService;
 
+    private ArtikelKategoriService $artikelKategoriService;
+
     public function initController(
         \CodeIgniter\HTTP\RequestInterface $request,
         \CodeIgniter\HTTP\ResponseInterface $response,
@@ -27,7 +28,8 @@ class ArtikelController extends BaseController
     ): void {
         parent::initController($request, $response, $logger);
 
-        $this->artikelService = service('artikelService');
+        $this->artikelService         = service('artikelService');
+        $this->artikelKategoriService = service('artikelKategoriService');
     }
 
     public function index(?string $kategori = null): string
@@ -77,8 +79,8 @@ class ArtikelController extends BaseController
 
             session()->setFlashdata('success', 'Artikel berhasil ditambahkan.');
 
-            $redirect = $dto->kategori->value !== ''
-                ? site_url('admin/artikel/kategori/' . $dto->kategori->value)
+            $redirect = $dto->kategori !== ''
+                ? site_url('admin/artikel/kategori/' . $dto->kategori)
                 : site_url('admin/artikel');
 
             return $this->htmxRedirect($redirect);
@@ -117,7 +119,7 @@ class ArtikelController extends BaseController
 
             session()->setFlashdata('success', 'Artikel berhasil diperbarui.');
 
-            return $this->htmxRedirect(site_url('admin/artikel/kategori/' . $dto->kategori->value));
+            return $this->htmxRedirect(site_url('admin/artikel/kategori/' . $dto->kategori));
         } catch (DomainException | InvalidArgumentException | RuntimeException $e) {
             return $this->formErrorResponse($e->getMessage());
         }
@@ -131,9 +133,7 @@ class ArtikelController extends BaseController
 
             session()->setFlashdata('success', 'Artikel berhasil dihapus.');
 
-            $kategoriValue = $existing->kategori instanceof ArtikelKategori
-                ? $existing->kategori->value
-                : (string) $existing->kategori;
+            $kategoriValue = (string) $existing->kategori;
 
             $filter = new ContentListFilterDto(
                 kategori: $kategoriValue,
@@ -158,9 +158,15 @@ class ArtikelController extends BaseController
      */
     private function formRules(): array
     {
+        $slugs = [];
+
+        foreach ($this->artikelKategoriService->findAllOrdered() as $record) {
+            $slugs[] = (string) $record->slug;
+        }
+
         return [
             'judul'          => 'required|min_length[3]|max_length[255]',
-            'kategori'       => 'required|in_list[artikel_iman,renungan_harian,orang_kudus,mutiara_biblika]',
+            'kategori'       => 'required|in_list[' . implode(',', $slugs) . ']',
             'konten'         => 'permit_empty',
             'status'         => 'required|in_list[draft,terbit]',
             'tanggal_terbit' => 'permit_empty|valid_date[Y-m-d\TH:i]',
@@ -177,11 +183,11 @@ class ArtikelController extends BaseController
         );
     }
 
-    private function buildDtoFromRequest(?int $excludeId = null): ArtikelDto
+    private function buildDtoFromRequest(?int $excludeId = null): \App\DTOs\Artikel\ArtikelDto
     {
         $judul    = trim((string) $this->request->getPost('judul'));
         $status   = PublishStatus::from((string) $this->request->getPost('status'));
-        $kategori = ArtikelKategori::from((string) $this->request->getPost('kategori'));
+        $kategori = trim((string) $this->request->getPost('kategori'));
         $konten   = trim((string) $this->request->getPost('konten'));
 
         return $this->artikelService->buildAdminDto(
@@ -200,13 +206,16 @@ class ArtikelController extends BaseController
             return null;
         }
 
-        $enum = ArtikelKategori::tryFromString($kategori);
+        $validSlugs = array_map(
+            static fn ($record): string => (string) $record->slug,
+            $this->artikelKategoriService->findAllOrdered(),
+        );
 
-        if ($enum === null) {
+        if (! in_array($kategori, $validSlugs, true)) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
 
-        return $enum->value;
+        return $kategori;
     }
 
     private function nullableGet(string $field): ?string

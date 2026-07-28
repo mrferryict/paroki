@@ -4,28 +4,38 @@ declare(strict_types=1);
 
 namespace Config;
 
+use App\Libraries\ImageResizer;
 use App\Libraries\PiiCipher;
 use App\Libraries\SlugGenerator;
+use App\Models\ArtikelKategoriModel;
 use App\Models\ArtikelModel;
 use App\Models\BeritaModel;
 use App\Models\DewanParokiBidangModel;
+use App\Models\DewanParokiPenjabatModel;
+use App\Models\DokumenKategoriModel;
 use App\Models\DokumenModel;
+use App\Models\GaleriEventModel;
 use App\Models\GaleriModel;
 use App\Models\HeroSlideModel;
 use App\Models\JadwalMisaModel;
 use App\Models\LingkunganModel;
 use App\Models\PendaftaranModel;
 use App\Models\SakramenJenisModel;
+use App\Models\SiteSettingModel;
 use App\Models\WilayahModel;
 use App\Repositories\ArtikelRepository;
 use App\Repositories\BeritaRepository;
 use App\Repositories\LingkunganRepository;
 use App\Repositories\PendaftaranRepository;
 use App\Repositories\WilayahRepository;
+use App\Services\ArtikelKategoriService;
 use App\Services\ArtikelService;
 use App\Services\BeritaService;
 use App\Services\DewanParokiBidangService;
+use App\Services\DewanParokiPenjabatService;
+use App\Services\DokumenKategoriService;
 use App\Services\DokumenService;
+use App\Services\GaleriEventService;
 use App\Services\GaleriService;
 use App\Services\HeroSlideService;
 use App\Services\HomeService;
@@ -33,6 +43,7 @@ use App\Services\JadwalMisaService;
 use App\Services\LingkunganService;
 use App\Services\PendaftaranService;
 use App\Services\SakramenJenisService;
+use App\Services\SiteSettingService;
 use App\Services\WilayahService;
 use CodeIgniter\Config\BaseService;
 
@@ -61,8 +72,17 @@ class Services extends BaseService
             static::sakramenJenisService(false),
             static::beritaService(false),
             static::artikelService(false),
-            static::dokumenService(false),
+            static::artikelKategoriService(false),
         );
+    }
+
+    public static function siteSettingService(bool $getShared = true): SiteSettingService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('siteSettingService');
+        }
+
+        return new SiteSettingService(new SiteSettingModel());
     }
 
     public static function dewanParokiBidangService(bool $getShared = true): DewanParokiBidangService
@@ -71,7 +91,24 @@ class Services extends BaseService
             return static::getSharedInstance('dewanParokiBidangService');
         }
 
-        return new DewanParokiBidangService(new DewanParokiBidangModel());
+        return new DewanParokiBidangService(
+            new DewanParokiBidangModel(),
+            new DewanParokiPenjabatModel(),
+            static::piiCipher(false),
+        );
+    }
+
+    public static function dewanParokiPenjabatService(bool $getShared = true): DewanParokiPenjabatService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('dewanParokiPenjabatService');
+        }
+
+        return new DewanParokiPenjabatService(
+            new DewanParokiPenjabatModel(),
+            new DewanParokiBidangModel(),
+            static::piiCipher(false),
+        );
     }
 
     public static function sakramenJenisService(bool $getShared = true): SakramenJenisService
@@ -147,6 +184,19 @@ class Services extends BaseService
         );
     }
 
+    public static function artikelKategoriService(bool $getShared = true): ArtikelKategoriService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('artikelKategoriService');
+        }
+
+        return new ArtikelKategoriService(
+            new ArtikelKategoriModel(),
+            new ArtikelModel(),
+            static::slugGenerator(false),
+        );
+    }
+
     public static function artikelService(bool $getShared = true): ArtikelService
     {
         if ($getShared) {
@@ -155,6 +205,19 @@ class Services extends BaseService
 
         return new ArtikelService(
             new ArtikelRepository(new ArtikelModel()),
+            static::slugGenerator(false),
+            static::artikelKategoriService(false),
+        );
+    }
+
+    public static function galeriEventService(bool $getShared = true): GaleriEventService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('galeriEventService');
+        }
+
+        return new GaleriEventService(
+            new GaleriEventModel(),
             static::slugGenerator(false),
         );
     }
@@ -165,7 +228,24 @@ class Services extends BaseService
             return static::getSharedInstance('galeriService');
         }
 
-        return new GaleriService(new GaleriModel());
+        return new GaleriService(
+            new GaleriModel(),
+            new GaleriEventModel(),
+            new ImageResizer(),
+        );
+    }
+
+    public static function dokumenKategoriService(bool $getShared = true): DokumenKategoriService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('dokumenKategoriService');
+        }
+
+        return new DokumenKategoriService(
+            new DokumenKategoriModel(),
+            new DokumenModel(),
+            static::slugGenerator(false),
+        );
     }
 
     public static function dokumenService(bool $getShared = true): DokumenService
@@ -174,7 +254,10 @@ class Services extends BaseService
             return static::getSharedInstance('dokumenService');
         }
 
-        return new DokumenService(new DokumenModel());
+        return new DokumenService(
+            new DokumenModel(),
+            static::dokumenKategoriService(false),
+        );
     }
 
     public static function pendaftaranService(bool $getShared = true): PendaftaranService

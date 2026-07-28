@@ -11,6 +11,7 @@ use App\DTOs\Shared\PaginatedResultDto;
 use App\Entities\Berita;
 use App\Enums\BeritaKategori;
 use App\Enums\PublishStatus;
+use App\Libraries\PublicUploadDirectory;
 use App\Libraries\SlugGenerator;
 use App\Repositories\BeritaRepository;
 use CodeIgniter\HTTP\Files\UploadedFile;
@@ -64,14 +65,57 @@ class BeritaService
         return $this->beritaRepository->findLatestPublished($limit);
     }
 
-    public function findPublishedPaginated(?string $kategori, int $page, int $perPage = 12): PaginatedResultDto
+    public function findPublishedPaginated(?string $kategori, int $page, int $perPage = 12, ?string $tag = null): PaginatedResultDto
     {
         return $this->findPaginated(new ContentListFilterDto(
             kategori: $kategori !== '' ? $kategori : null,
             status: PublishStatus::Terbit->value,
+            tag: $tag !== null && $tag !== '' ? $this->normalizeTagSlug($tag) : null,
             page: max(1, $page),
             perPage: $perPage,
         ));
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function findPublishedTags(): array
+    {
+        return $this->beritaRepository->findPublishedTags();
+    }
+
+    public function normalizeTags(?string $raw): ?string
+    {
+        if ($raw === null || trim($raw) === '') {
+            return null;
+        }
+
+        $parts = preg_split('/[,;]+/', $raw) ?: [];
+        $tags  = [];
+
+        foreach ($parts as $part) {
+            $slug = $this->normalizeTagSlug(trim($part));
+
+            if ($slug !== '') {
+                $tags[] = $slug;
+            }
+        }
+
+        $tags = array_values(array_unique($tags));
+
+        return $tags === [] ? null : implode(',', $tags);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function parseTags(?string $stored): array
+    {
+        if ($stored === null || trim($stored) === '') {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', explode(',', $stored))));
     }
 
     /**
@@ -88,6 +132,7 @@ class BeritaService
             'kategori'      => $kategori?->value ?? (string) ($item->kategori ?? ''),
             'kategoriLabel' => $kategori?->label() ?? (string) ($item->kategori ?? ''),
             'ringkasan'     => (string) ($item->ringkasan ?? ''),
+            'tags'          => $this->parseTags(isset($item->tags) ? (string) $item->tags : null),
             'gambar'        => $this->resolvePublicImage((string) ($item->gambar_utama ?? '')),
             'tanggalTerbit' => $this->formatPublicDate((string) ($item->tanggal_terbit ?? '')),
             'href'          => site_url('berita/' . ($item->slug ?? '')),
@@ -113,6 +158,11 @@ class BeritaService
         }
 
         return $berita;
+    }
+
+    public function incrementViewCount(int $id): void
+    {
+        $this->beritaRepository->incrementViewCount($id);
     }
 
     public function findById(int $id): Berita
@@ -146,12 +196,14 @@ class BeritaService
         PublishStatus $status,
         ?string $tanggalTerbitRaw,
         ?string $gambarUtama,
+        ?string $tagsRaw = null,
         ?int $excludeId = null,
     ): BeritaDto {
         return new BeritaDto(
             judul: $judul,
             slug: $this->generateUniqueSlug($judul, $excludeId),
             kategori: $kategori,
+            tags: $this->normalizeTags($tagsRaw),
             ringkasan: $ringkasan,
             konten: $konten,
             gambarUtama: $gambarUtama,
@@ -228,11 +280,7 @@ class BeritaService
             throw new InvalidArgumentException('Format gambar harus JPEG, PNG, atau WebP.');
         }
 
-        $targetDir = FCPATH . self::UPLOAD_SUBDIR;
-
-        if (! is_dir($targetDir) && ! mkdir($targetDir, 0755, true) && ! is_dir($targetDir)) {
-            throw new RuntimeException('Direktori unggahan berita tidak dapat dibuat.');
-        }
+        $targetDir = PublicUploadDirectory::ensure(self::UPLOAD_SUBDIR);
 
         $storedName = $file->getRandomName();
 
@@ -295,5 +343,14 @@ class BeritaService
         }
 
         return base_url($relativePath);
+    }
+
+    private function normalizeTagSlug(string $tag): string
+    {
+        $tag = strtolower($tag);
+        $tag = preg_replace('/\s+/', '-', $tag) ?? '';
+        $tag = preg_replace('/[^a-z0-9\-]/', '', $tag) ?? '';
+
+        return $tag;
     }
 }

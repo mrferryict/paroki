@@ -8,7 +8,6 @@ use App\DTOs\Artikel\ArtikelDto;
 use App\DTOs\Shared\ContentListFilterDto;
 use App\DTOs\Shared\PaginatedResultDto;
 use App\Entities\Artikel;
-use App\Enums\ArtikelKategori;
 use App\Enums\PublishStatus;
 use App\Libraries\SlugGenerator;
 use App\Repositories\ArtikelRepository;
@@ -21,6 +20,7 @@ class ArtikelService
     public function __construct(
         private readonly ArtikelRepository $artikelRepository,
         private readonly SlugGenerator $slugGenerator,
+        private readonly ArtikelKategoriService $artikelKategoriService,
     ) {}
 
     /**
@@ -28,7 +28,7 @@ class ArtikelService
      */
     public function kategoriOptions(): array
     {
-        return ArtikelKategori::options();
+        return $this->artikelKategoriService->kategoriOptions();
     }
 
     /**
@@ -67,7 +67,8 @@ class ArtikelService
      */
     public function mapForPublicCard(Artikel $item): array
     {
-        $kategori = ArtikelKategori::tryFromString((string) ($item->kategori ?? ''));
+        $kategoriValue = (string) ($item->kategori ?? '');
+        $kategoriLabel = $this->artikelKategoriService->getLabelForSlug($kategoriValue) ?? $kategoriValue;
 
         $excerpt = strip_tags((string) ($item->konten ?? ''));
 
@@ -75,14 +76,12 @@ class ArtikelService
             $excerpt = mb_substr($excerpt, 0, 137) . '…';
         }
 
-        $kategoriValue = $kategori?->value ?? (string) ($item->kategori ?? '');
-
         return [
             'id'            => (int) $item->id,
             'judul'         => (string) ($item->judul ?? ''),
             'slug'          => (string) ($item->slug ?? ''),
             'kategori'      => $kategoriValue,
-            'kategoriLabel' => $kategori?->label() ?? $kategoriValue,
+            'kategoriLabel' => $kategoriLabel,
             'ringkasan'     => $excerpt,
             'tanggalTerbit' => $this->formatPublicDate((string) ($item->tanggal_terbit ?? '')),
             'href'          => site_url('katekese/' . $kategoriValue . '/' . ($item->slug ?? '')),
@@ -101,7 +100,7 @@ class ArtikelService
 
     public function findPublishedByKategoriAndSlug(string $kategori, string $slug): Artikel
     {
-        if (ArtikelKategori::tryFromString($kategori) === null) {
+        if (! $this->artikelKategoriService->isActiveSlug($kategori)) {
             throw new DomainException('Artikel tidak ditemukan.');
         }
 
@@ -125,6 +124,11 @@ class ArtikelService
         }
 
         return $artikel;
+    }
+
+    public function incrementViewCount(int $id): void
+    {
+        $this->artikelRepository->incrementViewCount($id);
     }
 
     public function findById(int $id): Artikel
@@ -152,7 +156,7 @@ class ArtikelService
 
     public function buildAdminDto(
         string $judul,
-        ArtikelKategori $kategori,
+        string $kategori,
         ?string $konten,
         PublishStatus $status,
         ?string $tanggalTerbitRaw,

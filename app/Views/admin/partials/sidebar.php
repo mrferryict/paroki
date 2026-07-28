@@ -10,14 +10,17 @@ declare(strict_types=1);
 $navItems = [
     ['label' => 'Wilayah & Lingkungan', 'href' => 'admin/wilayah', 'match' => 'admin/wilayah'],
     ['label' => 'Dewan Paroki (DPH)', 'href' => 'admin/dewan-paroki', 'match' => 'admin/dewan-paroki'],
-    ['label' => 'Sakramen & Layanan', 'href' => 'admin/sakramen-jenis', 'match' => 'admin/sakramen-jenis'],
+    ['label' => 'Layanan Paroki', 'href' => 'admin/sakramen-jenis', 'match' => 'admin/sakramen-jenis'],
     ['label' => 'Pendaftaran', 'href' => 'admin/pendaftaran', 'match' => 'admin/pendaftaran'],
     ['label' => 'Berita & Kegiatan', 'href' => 'admin/berita', 'match' => 'admin/berita'],
     ['label' => 'Katekese & Renungan', 'href' => 'admin/artikel', 'match' => 'admin/artikel'],
-    ['label' => 'Dokumen', 'href' => 'admin/dokumen', 'match' => 'admin/dokumen'],
+    ['label' => 'Kategori Katekese', 'href' => 'admin/katekese-kategori', 'match' => 'admin/katekese-kategori'],
+    ['label' => 'Unduhan', 'href' => 'admin/dokumen', 'match' => 'admin/dokumen'],
+    ['label' => 'Kategori Unduhan', 'href' => 'admin/unduhan-kategori', 'match' => 'admin/unduhan-kategori'],
     ['label' => 'Jadwal Misa', 'href' => 'admin/jadwal-misa', 'match' => 'admin/jadwal-misa'],
     ['label' => 'Galeri', 'href' => 'admin/galeri', 'match' => 'admin/galeri'],
     ['label' => 'Hero Slide', 'href' => 'admin/hero-slide', 'match' => 'admin/hero-slide'],
+    ['label' => 'Pengaturan Situs', 'href' => 'admin/pengaturan', 'match' => 'admin/pengaturan'],
 ];
 
 $isActive = static function (string $match) use ($uri): bool {

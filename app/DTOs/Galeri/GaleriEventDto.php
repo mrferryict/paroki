@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\DTOs\Galeri;
 
-readonly class GaleriDto
+readonly class GaleriEventDto
 {
     public function __construct(
-        public string $filePath,
-        public ?string $caption,
+        public string $judul,
+        public string $slug,
         public int $urutan,
     ) {}
 
@@ -18,9 +18,9 @@ readonly class GaleriDto
     public function toModelData(): array
     {
         return [
-            'file_path' => $this->filePath,
-            'caption'   => $this->caption,
-            'urutan'    => $this->urutan,
+            'judul'  => $this->judul,
+            'slug'   => $this->slug,
+            'urutan' => $this->urutan,
         ];
     }
 }

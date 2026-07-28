@@ -21,12 +21,19 @@ class BeritaRepository extends BaseRepository
     public function findPaginated(ContentListFilterDto $filter): PaginatedResultDto
     {
         $builder = $this->model
-            ->select('id, judul, slug, kategori, ringkasan, gambar_utama, status, tanggal_terbit, created_at')
+            ->select('id, judul, slug, kategori, tags, ringkasan, gambar_utama, status, tanggal_terbit, view_count, created_at')
             ->orderBy('tanggal_terbit', 'DESC')
             ->orderBy('id', 'DESC');
 
         if ($filter->kategori !== null && $filter->kategori !== '') {
             $builder->where('kategori', $filter->kategori);
+        }
+
+        if ($filter->tag !== null && $filter->tag !== '') {
+            $tag = strtolower(trim($filter->tag));
+            $builder->groupStart()
+                ->where("CONCAT(',', tags, ',') LIKE", '%,' . $this->model->db->escapeLikeString($tag) . ',%', false)
+                ->groupEnd();
         }
 
         if ($filter->status !== null && $filter->status !== '') {
@@ -71,5 +78,43 @@ class BeritaRepository extends BaseRepository
         }
 
         return $builder->countAllResults() > 0;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function findPublishedTags(): array
+    {
+        /** @var list<Berita> $rows */
+        $rows = $this->model
+            ->select('tags')
+            ->where('status', PublishStatus::Terbit->value)
+            ->where('tags IS NOT NULL')
+            ->where('tags !=', '')
+            ->findAll();
+
+        $tags = [];
+
+        foreach ($rows as $row) {
+            foreach (explode(',', (string) ($row->tags ?? '')) as $tag) {
+                $tag = trim($tag);
+
+                if ($tag !== '') {
+                    $tags[$tag] = $tag;
+                }
+            }
+        }
+
+        ksort($tags);
+
+        return array_values($tags);
+    }
+
+    public function incrementViewCount(int $id): void
+    {
+        $this->model
+            ->where('id', $id)
+            ->set('view_count', 'view_count + 1', false)
+            ->update();
     }
 }

@@ -23,10 +23,12 @@ class BeritaModel extends Model
         'judul',
         'slug',
         'kategori',
+        'tags',
         'ringkasan',
         'konten',
         'gambar_utama',
         'status',
         'tanggal_terbit',
+        'view_count',
     ];
 }

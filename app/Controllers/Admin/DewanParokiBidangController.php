@@ -28,17 +28,14 @@ class DewanParokiBidangController extends BaseController
 
     public function index(): string
     {
-        $items = $this->dewanParokiBidangService->findAllOrdered();
+        $rows = $this->dewanParokiBidangService->findAllForAdminTable();
 
         if ($this->isHtmxRequest()) {
-            return view('admin/dewan_paroki_bidang/partials/list', [
-                'items'       => $items,
-                'kodeOptions' => $this->dewanParokiBidangService->kodeOptions(),
-            ]);
+            return view('admin/dewan_paroki_bidang/partials/table', ['rows' => $rows]);
         }
 
         return view('admin/dewan_paroki_bidang/index', [
-            'items'       => $items,
+            'rows'        => $rows,
             'title'       => 'Dewan Paroki — Bidang DPH',
             'kodeOptions' => $this->dewanParokiBidangService->kodeOptions(),
         ]);
@@ -112,9 +109,8 @@ class DewanParokiBidangController extends BaseController
 
             session()->setFlashdata('success', 'Bidang DPH berhasil dihapus.');
 
-            return view('admin/dewan_paroki_bidang/partials/list', [
-                'items'       => $this->dewanParokiBidangService->findAllOrdered(),
-                'kodeOptions' => $this->dewanParokiBidangService->kodeOptions(),
+            return view('admin/dewan_paroki_bidang/partials/table', [
+                'rows' => $this->dewanParokiBidangService->findAllForAdminTable(),
             ]);
         } catch (DomainException | RuntimeException $e) {
             return $this->listErrorResponse($e->getMessage());
@@ -129,9 +125,8 @@ class DewanParokiBidangController extends BaseController
             return $this->listErrorResponse($e->getMessage());
         }
 
-        return view('admin/dewan_paroki_bidang/partials/list', [
-            'items'       => $this->dewanParokiBidangService->findAllOrdered(),
-            'kodeOptions' => $this->dewanParokiBidangService->kodeOptions(),
+        return view('admin/dewan_paroki_bidang/partials/table', [
+            'rows' => $this->dewanParokiBidangService->findAllForAdminTable(),
         ]);
     }
 
@@ -143,9 +138,8 @@ class DewanParokiBidangController extends BaseController
             return $this->listErrorResponse($e->getMessage());
         }
 
-        return view('admin/dewan_paroki_bidang/partials/list', [
-            'items'       => $this->dewanParokiBidangService->findAllOrdered(),
-            'kodeOptions' => $this->dewanParokiBidangService->kodeOptions(),
+        return view('admin/dewan_paroki_bidang/partials/table', [
+            'rows' => $this->dewanParokiBidangService->findAllForAdminTable(),
         ]);
     }
 

@@ -21,6 +21,7 @@ class SakramenJenisModel extends Model
 
     protected $allowedFields = [
         'kode',
+        'grup',
         'nama',
         'deskripsi',
         'icon',

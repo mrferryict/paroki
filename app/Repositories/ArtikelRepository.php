@@ -21,7 +21,7 @@ class ArtikelRepository extends BaseRepository
     public function findPaginated(ContentListFilterDto $filter): PaginatedResultDto
     {
         $builder = $this->model
-            ->select('id, judul, slug, kategori, konten, status, tanggal_terbit, created_at')
+            ->select('id, judul, slug, kategori, konten, status, tanggal_terbit, view_count, created_at')
             ->orderBy('tanggal_terbit', 'DESC')
             ->orderBy('id', 'DESC');
 
@@ -76,5 +76,13 @@ class ArtikelRepository extends BaseRepository
         }
 
         return $builder->countAllResults() > 0;
+    }
+
+    public function incrementViewCount(int $id): void
+    {
+        $this->model
+            ->where('id', $id)
+            ->set('view_count', 'view_count + 1', false)
+            ->update();
     }
 }

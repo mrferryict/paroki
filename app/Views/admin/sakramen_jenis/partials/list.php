@@ -20,7 +20,7 @@
                             <?php else: ?>
                                 <span class="rounded bg-stone-100 px-2 py-0.5 text-xs text-stone-600">Nonaktif</span>
                             <?php endif ?>
-                            <span class="text-xs text-stone-400"><?= esc($kodeOptions[$item->kode] ?? $item->kode) ?> · #<?= esc((string) $item->urutan) ?></span>
+                            <span class="text-xs text-stone-400"><?= esc($grupOptions[$item->grup] ?? $item->grup) ?> · <?= esc($kodeOptions[$item->kode] ?? $item->kode) ?> · #<?= esc((string) $item->urutan) ?></span>
                         </div>
                         <?php if ($item->deskripsi): ?>
                             <p class="mt-1 line-clamp-2 text-sm text-stone-600"><?= esc((string) $item->deskripsi) ?></p>

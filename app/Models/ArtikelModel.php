@@ -26,5 +26,6 @@ class ArtikelModel extends Model
         'konten',
         'status',
         'tanggal_terbit',
+        'view_count',
     ];
 }

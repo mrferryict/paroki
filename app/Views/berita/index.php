@@ -21,27 +21,76 @@
             </a>
         </div>
 
+        <?php
+        $buildBeritaUrl = static function (?string $kategori = null, ?string $tag = null): string {
+            $params = array_filter([
+                'kategori' => $kategori,
+                'tag'      => $tag,
+            ], static fn ($value) => $value !== null && $value !== '');
+
+            $query = http_build_query($params);
+
+            return site_url('berita') . ($query !== '' ? '?' . $query : '');
+        };
+        $allUrl      = $buildBeritaUrl(tag: ($activeTag ?? '') !== '' ? $activeTag : null);
+        $isAllActive = ($activeKategori ?? '') === '';
+        ?>
+
         <div class="mt-8 flex flex-wrap gap-2">
-            <?php
-            $allUrl = site_url('berita');
-            $isAllActive = ($activeKategori ?? '') === '';
-            ?>
             <a href="<?= esc($allUrl) ?>"
                class="rounded-full px-4 py-2 text-sm font-medium transition <?= $isAllActive ? 'bg-maroon text-ivory' : 'bg-white text-stone-600 ring-1 ring-gold/30 hover:bg-maroon/5' ?>">
                 Semua
             </a>
             <?php foreach ($kategoriOptions as $value => $label): ?>
                 <?php $isActive = ($activeKategori ?? '') === $value; ?>
-                <a href="<?= esc(site_url('berita?kategori=' . urlencode($value))) ?>"
+                <a href="<?= esc($buildBeritaUrl(kategori: $value, tag: ($activeTag ?? '') !== '' ? $activeTag : null)) ?>"
                    class="rounded-full px-4 py-2 text-sm font-medium transition <?= $isActive ? 'bg-maroon text-ivory' : 'bg-white text-stone-600 ring-1 ring-gold/30 hover:bg-maroon/5' ?>">
                     <?= esc($label) ?>
                 </a>
             <?php endforeach ?>
         </div>
 
+        <form method="get" action="<?= site_url('berita') ?>" class="mt-6 flex flex-wrap items-end gap-3">
+            <?php if (($activeKategori ?? '') !== ''): ?>
+                <input type="hidden" name="kategori" value="<?= esc($activeKategori) ?>">
+            <?php endif ?>
+            <div class="min-w-[12rem] flex-1">
+                <label for="tag" class="mb-1 block text-sm font-medium text-stone-700">Cari berdasarkan tag</label>
+                <input type="text" name="tag" id="tag" value="<?= esc($activeTag ?? '') ?>"
+                       placeholder="Mis. natal, kegiatan"
+                       class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-maroon focus:outline-none focus:ring-1 focus:ring-maroon">
+            </div>
+            <button type="submit"
+                    class="rounded-lg bg-maroon px-4 py-2.5 text-sm font-semibold text-ivory hover:bg-maroon/90 transition-colors">
+                Cari
+            </button>
+            <?php if (($activeTag ?? '') !== ''): ?>
+                <a href="<?= esc($buildBeritaUrl(kategori: ($activeKategori ?? '') !== '' ? $activeKategori : null)) ?>"
+                   class="rounded-lg border border-gold/30 px-4 py-2.5 text-sm font-medium text-stone-600 hover:bg-white transition-colors">
+                    Reset tag
+                </a>
+            <?php endif ?>
+        </form>
+
+        <?php if (($tagOptions ?? []) !== []): ?>
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+                <span class="text-xs font-semibold uppercase tracking-wide text-stone-500">Tag populer:</span>
+                <?php foreach ($tagOptions as $tagOption): ?>
+                    <?php $isTagActive = ($activeTag ?? '') === $tagOption; ?>
+                    <a href="<?= esc($buildBeritaUrl(
+                        kategori: ($activeKategori ?? '') !== '' ? $activeKategori : null,
+                        tag: $tagOption,
+                    )) ?>"
+                       class="rounded-full px-3 py-1 text-xs font-medium transition <?= $isTagActive ? 'bg-gold/30 text-maroon' : 'bg-white text-stone-600 ring-1 ring-gold/20 hover:bg-gold/10' ?>">
+                        #<?= esc($tagOption) ?>
+                    </a>
+                <?php endforeach ?>
+            </div>
+        <?php endif ?>
+
         <?php if ($items === []): ?>
             <div class="mt-12 rounded-2xl border border-gold/20 bg-white px-6 py-12 text-center">
-                <p class="text-stone-500">Belum ada berita terbit<?= ($activeKategori ?? '') !== '' ? ' untuk kategori ini' : '' ?>.</p>
+                <p class="text-stone-500">Belum ada berita terbit<?= ($activeKategori ?? '') !== '' ? ' untuk kategori ini' : '' ?><?= ($activeTag ?? '') !== '' ? ' dengan tag tersebut' : '' ?>.</p>
                 <p class="mt-2 text-sm text-stone-400">Konten akan muncul otomatis setelah dipublikasikan dari panel admin.</p>
             </div>
         <?php else: ?>
@@ -70,6 +119,13 @@
                                     </span>
                                     <span class="text-stone-500"><?= esc($item['tanggalTerbit']) ?></span>
                                 </div>
+                                <?php if (($item['tags'] ?? []) !== []): ?>
+                                    <div class="mt-2 flex flex-wrap gap-1.5">
+                                        <?php foreach ($item['tags'] as $tag): ?>
+                                            <span class="rounded-full bg-gold/15 px-2 py-0.5 text-[11px] font-medium text-maroon/80">#<?= esc($tag) ?></span>
+                                        <?php endforeach ?>
+                                    </div>
+                                <?php endif ?>
                                 <h2 class="mt-3 font-display text-xl font-semibold text-maroon group-hover:text-maroon/80">
                                     <?= esc($item['judul']) ?>
                                 </h2>
@@ -86,7 +142,10 @@
 
             <?= view('partials/public_pagination', [
                 'pager'              => $pager,
-                'queryParams'        => array_filter(['kategori' => $activeKategori ?? '']),
+                'queryParams'        => array_filter([
+                    'kategori' => $activeKategori ?? '',
+                    'tag'      => $activeTag ?? '',
+                ]),
                 'paginationBaseUrl'  => site_url('berita'),
                 'paginationLabel'    => 'berita',
             ]) ?>

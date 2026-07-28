@@ -28,9 +28,48 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <meta name="csrf-token" content="<?= csrf_hash() ?>">
+    <meta name="csrf-field" content="<?= esc(config('Security')->tokenName) ?>">
     <script>
         document.addEventListener('htmx:configRequest', (event) => {
-            event.detail.headers['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').content;
+            const form = event.detail.elt?.tagName === 'FORM'
+                ? event.detail.elt
+                : event.detail.elt?.closest('form');
+            const fieldName = document.querySelector('meta[name="csrf-field"]')?.content ?? 'csrf_test_name';
+            const tokenInput = form?.querySelector(`input[name="${fieldName}"]`);
+
+            if (tokenInput?.value) {
+                event.detail.headers['X-CSRF-TOKEN'] = tokenInput.value;
+                return;
+            }
+
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta?.content) {
+                event.detail.headers['X-CSRF-TOKEN'] = meta.content;
+            }
+        });
+
+        document.addEventListener('htmx:afterSwap', (event) => {
+            const fieldName = document.querySelector('meta[name="csrf-field"]')?.content ?? 'csrf_test_name';
+            const tokenInput = event.detail.target?.querySelector?.(`input[name="${fieldName}"]`);
+
+            if (tokenInput?.value) {
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta) {
+                    meta.content = tokenInput.value;
+                }
+            }
+        });
+
+        document.addEventListener('htmx:responseError', (event) => {
+            const target = event.detail.target;
+            if (!target) {
+                return;
+            }
+
+            const notice = document.createElement('div');
+            notice.className = 'mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800';
+            notice.textContent = 'Permintaan gagal (HTTP ' + event.detail.xhr.status + '). Muat ulang halaman lalu coba lagi.';
+            target.prepend(notice);
         });
     </script>
     <style>[x-cloak] { display: none !important; }</style>

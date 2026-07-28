@@ -23,6 +23,7 @@
                             <?php if ($item->tanggal_terbit): ?>
                                 · <?= esc($item->tanggal_terbit->toLocalizedString('d MMM yyyy')) ?>
                             <?php endif ?>
+                            · <?= esc(number_format((int) ($item->view_count ?? 0), 0, ',', '.')) ?> dilihat
                         </p>
                     </div>
                     <div class="flex shrink-0 flex-col gap-1">

@@ -7,10 +7,10 @@ namespace Tests\Unit\Services;
 use App\DTOs\Wilayah\WilayahWithLingkunganDto;
 use App\Entities\HeroSlide;
 use App\Entities\Wilayah;
+use App\Services\ArtikelKategoriService;
 use App\Services\ArtikelService;
 use App\Services\BeritaService;
 use App\Services\DewanParokiBidangService;
-use App\Services\DokumenService;
 use App\Services\HeroSlideService;
 use App\Services\HomeService;
 use App\Services\JadwalMisaService;
@@ -59,7 +59,7 @@ final class HomeServiceTest extends CIUnitTestCase
             $this->createStub(SakramenJenisService::class),
             $this->createStub(BeritaService::class),
             $this->createStub(ArtikelService::class),
-            $this->createStub(DokumenService::class),
+            $this->createStub(ArtikelKategoriService::class),
         );
 
         $data = $service->getLandingData();

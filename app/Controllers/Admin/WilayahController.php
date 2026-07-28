@@ -28,15 +28,15 @@ class WilayahController extends BaseController
 
     public function index(): string
     {
-        $items = $this->wilayahService->findAllForList();
+        $rows = $this->wilayahService->findAllForAdminTable();
 
         if ($this->isHtmxRequest()) {
-            return view('admin/wilayah/partials/list', ['items' => $items]);
+            return view('admin/wilayah/partials/table', ['rows' => $rows]);
         }
 
         return view('admin/wilayah/index', [
-            'items' => $items,
-            'title' => 'Wilayah',
+            'rows'  => $rows,
+            'title' => 'Wilayah & Lingkungan',
         ]);
     }
 
@@ -119,8 +119,8 @@ class WilayahController extends BaseController
 
             session()->setFlashdata('success', 'Wilayah berhasil dihapus.');
 
-            return view('admin/wilayah/partials/list', [
-                'items' => $this->wilayahService->findAllForList(),
+            return view('admin/wilayah/partials/table', [
+                'rows' => $this->wilayahService->findAllForAdminTable(),
             ]);
         } catch (DomainException | RuntimeException $e) {
             return $this->listErrorResponse($e->getMessage());

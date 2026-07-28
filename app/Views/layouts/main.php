@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="<?= esc($title ?? 'Paroki Hati Kudus Yesus') ?> — Profil paroki, jadwal misa, sakramen, berita, katekese, dan formulir pendaftaran.">
+    <meta name="description" content="<?= esc($title ?? 'Paroki Hati Kudus Yesus') ?> — Profil paroki, jadwal misa, layanan, berita, katekese, dan unduhan.">
     <title><?= esc($title ?? 'Paroki Hati Kudus Yesus') ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -49,61 +49,38 @@
       x-data="landingPage()"
       x-cloak>
 
-    <header class="fixed inset-x-0 top-0 z-50 border-b border-gold/20 bg-maroon/95 text-ivory backdrop-blur-md">
-        <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-            <a href="#hero" class="font-display text-xl font-semibold tracking-tight sm:text-2xl">
-                Paroki Hati Kudus Yesus
-            </a>
-            <nav class="hidden items-center gap-6 text-sm font-medium md:flex">
-                <a href="#profil" class="hover:text-gold transition-colors">Profil</a>
-                <a href="#jadwal" class="hover:text-gold transition-colors">Jadwal</a>
-                <a href="#sakramen" class="hover:text-gold transition-colors">Sakramen</a>
-                <a href="#berita" class="hover:text-gold transition-colors">Berita</a>
-                <a href="#katekese" class="hover:text-gold transition-colors">Katekese</a>
-                <a href="#formulir" class="rounded bg-gold/20 px-4 py-2 hover:bg-gold/30 transition-colors">Formulir</a>
-            </nav>
-            <button type="button"
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gold/10 md:hidden"
-                    @click="navOpen = !navOpen"
-                    :aria-expanded="navOpen"
-                    aria-label="Menu">
-                <svg x-show="!navOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                <svg x-show="navOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
-        <div x-show="navOpen" x-transition class="border-t border-gold/20 px-4 py-4 md:hidden">
-            <div class="flex flex-col gap-3 text-sm font-medium">
-                <a href="#profil" @click="navOpen=false">Profil</a>
-                <a href="#jadwal" @click="navOpen=false">Jadwal</a>
-                <a href="#sakramen" @click="navOpen=false">Sakramen</a>
-                <a href="#berita" @click="navOpen=false">Berita</a>
-                <a href="#katekese" @click="navOpen=false">Katekese</a>
-                <a href="#formulir" @click="navOpen=false" class="rounded bg-gold/20 px-4 py-2 text-center">Formulir</a>
-            </div>
-        </div>
-    </header>
+    <?= view('partials/site_header', [
+        'isHome'     => true,
+        'shareUrl'   => current_url(),
+        'shareTitle' => $title ?? 'Paroki Hati Kudus Yesus',
+    ]) ?>
 
-    <main>
+    <main class="pt-[4.75rem]">
         <?= $this->renderSection('content') ?>
     </main>
 
     <?= view('partials/icon_scripts') ?>
+    <?= view('partials/site_nav_scripts', [
+        'shareUrl'   => current_url(),
+        'shareTitle' => $title ?? 'Paroki Hati Kudus Yesus',
+    ]) ?>
 
     <script>
         function landingPage() {
             return {
-                navOpen: false,
+                ...siteNavBase(),
                 currentSlide: 0,
                 slideTimer: null,
                 activeWilayah: null,
                 activeKatekeseTab: <?= json_encode($katekeseKategori[0]['value'] ?? 'artikel_iman', JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+                activeLayananTab: <?= json_encode($layananGrup[0]['value'] ?? 'sakramen', JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
                 heroSlides: <?= json_encode($heroSlides ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
                 bidangDPH: <?= json_encode($bidangDPH ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
                 wilayahList: <?= json_encode($wilayahList ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
-                sakramenList: <?= json_encode($sakramenList ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+                layananList: <?= json_encode($layananList ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+                layananGrup: <?= json_encode($layananGrup ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
                 beritaList: <?= json_encode($beritaList ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
                 katekeseList: <?= json_encode($katekeseList ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
-                dokumenList: <?= json_encode($dokumenList ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
                 katekeseKategori: <?= json_encode($katekeseKategori ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
 
                 init() {
@@ -117,6 +94,10 @@
 
                 get filteredKatekese() {
                     return this.katekeseList.filter((item) => item.kategori === this.activeKatekeseTab);
+                },
+
+                get filteredLayanan() {
+                    return this.layananList.filter((item) => item.grup === this.activeLayananTab);
                 },
 
                 get currentHero() {
@@ -170,7 +151,7 @@
                     if (select && sakramenId) {
                         select.value = String(sakramenId);
                     }
-                    document.getElementById('formulir')?.scrollIntoView({ behavior: 'smooth' });
+                    document.getElementById('pendaftaran-layanan')?.scrollIntoView({ behavior: 'smooth' });
                 },
             };
         }

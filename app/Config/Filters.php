@@ -54,10 +54,8 @@ class Filters extends BaseFilters
     public array $required = [
         'before' => [
             'forcehttps', // Force Global Secure Requests
-            'pagecache',  // Web Page Caching
         ],
         'after' => [
-            'pagecache',   // Web Page Caching
             'performance', // Performance Metrics
             'toolbar',     // Debug Toolbar
         ],
@@ -77,9 +75,12 @@ class Filters extends BaseFilters
             // 'honeypot',
             // Logout must reach its action even with an idle/expired session (.cursorrules §4.3).
             'csrf' => ['except' => ['logout']],
+            // Admin & auth pages embed CSRF in HTMX partials — never page-cache them.
+            'pagecache' => ['except' => ['admin', 'admin/*', 'login*', 'auth/*', 'logout']],
             // 'invalidchars',
         ],
         'after' => [
+            'pagecache' => ['except' => ['admin', 'admin/*', 'login*', 'auth/*', 'logout']],
             // 'honeypot',
             // 'secureheaders',
         ],

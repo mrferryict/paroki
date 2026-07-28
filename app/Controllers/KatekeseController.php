@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Enums\ArtikelKategori;
+use App\Services\ArtikelKategoriService;
 use App\Services\ArtikelService;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use DomainException;
@@ -13,6 +13,8 @@ class KatekeseController extends BaseController
 {
     private ArtikelService $artikelService;
 
+    private ArtikelKategoriService $artikelKategoriService;
+
     public function initController(
         \CodeIgniter\HTTP\RequestInterface $request,
         \CodeIgniter\HTTP\ResponseInterface $response,
@@ -20,12 +22,13 @@ class KatekeseController extends BaseController
     ): void {
         parent::initController($request, $response, $logger);
 
-        $this->artikelService = service('artikelService');
+        $this->artikelService         = service('artikelService');
+        $this->artikelKategoriService = service('artikelKategoriService');
     }
 
     public function index(?string $kategori = null): string
     {
-        if ($kategori !== null && $kategori !== '' && ArtikelKategori::tryFromString($kategori) === null) {
+        if ($kategori !== null && $kategori !== '' && ! $this->artikelKategoriService->isActiveSlug($kategori)) {
             throw PageNotFoundException::forPageNotFound();
         }
 
@@ -59,6 +62,8 @@ class KatekeseController extends BaseController
         } catch (DomainException) {
             throw PageNotFoundException::forPageNotFound();
         }
+
+        $this->artikelService->incrementViewCount((int) $artikel->id);
 
         $detail = $this->artikelService->mapForPublicDetail($artikel);
 

@@ -1,7 +1,7 @@
 <?php /** @var \App\Entities\Dokumen|null $item */ ?>
 <?php $isEdit = $item !== null && (int) ($item->id ?? 0) > 0; ?>
 <div>
-    <h2 class="mb-4 font-display text-xl font-semibold text-maroon"><?= $isEdit ? 'Edit Dokumen' : 'Tambah Dokumen' ?></h2>
+    <h2 class="mb-4 font-display text-xl font-semibold text-maroon"><?= $isEdit ? 'Edit Unduhan' : 'Tambah Unduhan' ?></h2>
 
     <?php if (isset($validation) && $validation->getErrors() !== []): ?>
         <div class="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
@@ -14,16 +14,19 @@
         <?php if ($isEdit): ?><input type="hidden" name="id" value="<?= esc((string) $item->id) ?>"><?php endif ?>
 
         <div>
-            <label for="nama" class="mb-1 block text-sm font-medium">Nama Dokumen <span class="text-red-600">*</span></label>
+            <label for="nama" class="mb-1 block text-sm font-medium">Nama Unduhan <span class="text-red-600">*</span></label>
             <input type="text" name="nama" id="nama" required value="<?= esc(old('nama', (string) ($item->nama ?? ''))) ?>"
                    class="w-full rounded border border-stone-300 px-3 py-2 text-sm">
         </div>
 
         <div>
             <label for="kategori" class="mb-1 block text-sm font-medium">Kategori <span class="text-red-600">*</span></label>
-            <input type="text" name="kategori" id="kategori" required placeholder="Mis. Formulir, Materi Katekese"
-                   value="<?= esc(old('kategori', (string) ($item->kategori ?? ''))) ?>"
-                   class="w-full rounded border border-stone-300 px-3 py-2 text-sm">
+            <?php $kategoriValue = old('kategori', (string) ($item->kategori ?? 'formulir')); ?>
+            <select name="kategori" id="kategori" required class="w-full rounded border border-stone-300 px-3 py-2 text-sm">
+                <?php foreach ($kategoriOptions as $value => $label): ?>
+                    <option value="<?= esc($value) ?>" <?= $kategoriValue === $value ? 'selected' : '' ?>><?= esc($label) ?></option>
+                <?php endforeach ?>
+            </select>
         </div>
 
         <div>

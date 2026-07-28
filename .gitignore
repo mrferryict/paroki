@@ -32,6 +32,10 @@ pnpm-debug.log*
 .vite/
 /public/hot
 
+# Uploaded media (keep directory structure via .gitkeep only)
+/public/uploads/**/*
+!/public/uploads/**/.gitkeep
+
 # ==============================================================================
 # CACHE & TEMP DIRECTORIES
 # ==============================================================================

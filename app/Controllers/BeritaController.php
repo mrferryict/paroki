@@ -26,6 +26,7 @@ class BeritaController extends BaseController
     public function index(): string
     {
         $kategori = trim((string) $this->request->getGet('kategori'));
+        $tag      = trim((string) $this->request->getGet('tag'));
         $page     = max(1, (int) $this->request->getGet('page'));
 
         if ($kategori !== '' && BeritaKategori::tryFromString($kategori) === null) {
@@ -35,6 +36,7 @@ class BeritaController extends BaseController
         $result = $this->beritaService->findPublishedPaginated(
             kategori: $kategori !== '' ? $kategori : null,
             page: $page,
+            tag: $tag !== '' ? $tag : null,
         );
 
         $items = array_map(
@@ -47,6 +49,8 @@ class BeritaController extends BaseController
             'items'           => $items,
             'pager'           => $result->pager,
             'activeKategori'  => $kategori,
+            'activeTag'       => $tag,
+            'tagOptions'      => $this->beritaService->findPublishedTags(),
             'kategoriOptions' => $this->beritaService->kategoriOptions(),
         ]);
     }
@@ -58,6 +62,8 @@ class BeritaController extends BaseController
         } catch (DomainException) {
             throw PageNotFoundException::forPageNotFound();
         }
+
+        $this->beritaService->incrementViewCount((int) $berita->id);
 
         $detail = $this->beritaService->mapForPublicDetail($berita);
 

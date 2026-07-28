@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\DTOs\HeroSlide\HeroSlideDto;
 use App\Entities\HeroSlide;
+use App\Libraries\PublicUploadDirectory;
 use App\Models\HeroSlideModel;
 use CodeIgniter\HTTP\Files\UploadedFile;
 use DomainException;
@@ -144,11 +145,7 @@ class HeroSlideService
             throw new InvalidArgumentException('Format gambar harus JPEG, PNG, atau WebP.');
         }
 
-        $targetDir = FCPATH . self::UPLOAD_SUBDIR;
-
-        if (! is_dir($targetDir) && ! mkdir($targetDir, 0755, true) && ! is_dir($targetDir)) {
-            throw new RuntimeException('Direktori unggahan hero slide tidak dapat dibuat.');
-        }
+        $targetDir = PublicUploadDirectory::ensure(self::UPLOAD_SUBDIR);
 
         $storedName = $file->getRandomName();
 

@@ -8,7 +8,7 @@
 
 Website profil paroki Katolik. Ada dua sisi:
 - **Publik** — beranda, profil paroki, jadwal misa, sakramen & pelayanan, berita & kegiatan,
-  katekese & renungan, formulir pendaftaran/kontak, unduhan dokumen.
+  katekese & renungan, formulir pendaftaran layanan (di section Layanan), halaman unduhan dokumen.
 - **Admin** (`/admin/*`, di belakang CodeIgniter Shield) — CRUD seluruh konten di atas.
 
 Referensi tampilan & interaksi front-end: `paroki-landing.html` (prototipe statis HTML5 + Tailwind +
@@ -40,7 +40,8 @@ Semua tabel referensi/master pakai `$useSoftDeletes = true` kecuali dinyatakan l
 
 ### 4.1 `wilayah`
 `id, nama, ketua_nama, ketua_kontak_cipher, ketua_kontak_hash, created_at, updated_at, deleted_at`
-- `ketua_kontak_*` = **PII** (nomor telepon ketua wilayah) → wajib cipher + HMAC hash per §6.
+- `ketua_nama` / `ketua_kontak_*` di UI admin & publik ditampilkan sebagai **Koordinator** (kolom DB tetap `ketua_*`).
+- `ketua_kontak_*` = **PII** (nomor telepon koordinator wilayah) → wajib cipher + HMAC hash per §6.
 - Relasi: satu Wilayah punya banyak `lingkungan`.
 
 ### 4.2 `lingkungan`
@@ -50,9 +51,27 @@ Semua tabel referensi/master pakai `$useSoftDeletes = true` kecuali dinyatakan l
 `id, kode (enum: liturgi|diakonia|koinonia|kerygma), nama_tampilan, deskripsi, icon, urutan`
 - Tabel referensi tetap (4 baris) — **tidak perlu paginasi** (§6 Performance, pengecualian tabel kecil).
 
-### 4.4 `sakramen_jenis`
-`id, kode (enum: baptis|komuni_pertama|krisma|tobat|perkawinan|pengurapan_orang_sakit|misdinar|konsultasi_psikologi|konsultasi_hukum|administrasi), nama, deskripsi, icon, urutan, is_active`
+### 4.3a `dewan_paroki_penjabat` (Penjabat per bidang DPH)
+`id, bidang_id (FK → dewan_paroki_bidang), nama, whatsapp_cipher, whatsapp_hash, urutan, created_at, updated_at, deleted_at`
+- Satu bidang DPH boleh punya **lebih dari satu** penjabat.
+- `nama` plaintext; `whatsapp_*` **wajib** cipher + HMAC hash (PII).
+- Admin: kelola di `/admin/dewan-paroki` — tabel expandable per bidang, tombol **+ Penjabat**.
+- Publik: nama penjabat ditampilkan di section Profil (DPH); nomor WA **tidak** ditampilkan di halaman publik.
+
+### 4.4 `sakramen_jenis` (Layanan Paroki — satu tabel untuk semua jenis layanan formulir)
+`id, kode (enum), grup (enum: sakramen|konsultasi|administrasi|petugas), nama, deskripsi, icon, urutan, is_active, deleted_at`
+
+**Hierarki menu publik "Layanan":**
+| Grup | Item |
+| --- | --- |
+| **Sakramen** (7) | baptis, komuni_pertama, krisma, tobat, perkawinan, pengurapan_orang_sakit, imamat |
+| **Konsultasi** | konsultasi_hukum, konsultasi_psikologi |
+| **Administrasi** | administrasi (Sekretariat) |
+| **Petugas** | misdinar, pemazmur, prodiakon, organis |
+
 - Tabel referensi kecil — tidak perlu paginasi.
+- Mapping `kode` → `grup` didefinisikan di `App\Enums\SakramenJenisKode` (single source of truth).
+- Admin route tetap `/admin/sakramen-jenis` (nama tabel); label UI: "Layanan Paroki".
 
 ### 4.5 `pendaftaran` (submission dari Formulir & Dokumen — **berisi PII**)
 `id, nama_lengkap, whatsapp_cipher, whatsapp_hash, sakramen_jenis_id (FK, nullable), pesan (nullable), status (enum: baru|diproses|selesai|ditolak), created_at, updated_at`
@@ -62,68 +81,96 @@ Semua tabel referensi/master pakai `$useSoftDeletes = true` kecuali dinyatakan l
   tanggal. WA hanya boleh didekripsi di halaman **detail** (authorized reveal), sesuai §6.
 
 ### 4.6 `berita` (Berita & Kegiatan)
-`id, judul, slug (unique), kategori (enum: pengumuman|kegiatan_paroki|pelayanan_sosial|kegiatan_wilayah|liturgi), ringkasan, konten, gambar_utama, status (enum: draft|terbit), tanggal_terbit (nullable), created_at, updated_at, deleted_at`
+`id, judul, slug (unique), kategori (enum: pengumuman|kegiatan_paroki|pelayanan_sosial|kegiatan_wilayah|liturgi), tags (nullable, comma-separated slug), ringkasan, konten, gambar_utama, status (enum: draft|terbit), tanggal_terbit (nullable), view_count, created_at, updated_at, deleted_at`
 - Bisa tumbuh tanpa batas → **wajib paginasi** (§6 Performance).
-- Halaman publik hanya menampilkan baris `status = terbit`.
+- Halaman publik hanya menampilkan baris `status = terbit`; filter `?kategori=` dan `?tag=`.
 - `gambar_utama` disimpan relatif terhadap `public/` (mis. `uploads/berita/{random}`) — bukan path absolut.
 
-### 4.7 `artikel` (Katekese & Renungan — satu tabel untuk 4 kategori, bukan 4 tabel terpisah)
-`id, judul, slug (unique), kategori (enum: artikel_iman|renungan_harian|orang_kudus|mutiara_biblika), konten, status (enum: draft|terbit), tanggal_terbit, created_at, updated_at, deleted_at`
+### 4.7 `artikel_kategori` (Katekese & Renungan — kategori dinamis)
+`id, slug (unique), label, urutan, is_active, created_at, updated_at, deleted_at`
+- Admin CRUD: `/admin/katekese-kategori` (menu sidebar **Kategori Katekese**).
+- Kategori awal (seed): `artikel_iman`, `renungan_harian`, `orang_kudus`, `mutiara_biblika` — bisa ditambah/dinonaktifkan tanpa ubah kode.
+- Nonaktifkan (`is_active = 0`) alih-alih hapus jika masih ada artikel terbit dengan slug kategori tersebut.
+
+### 4.8 `artikel` (Katekese & Renungan — satu tabel untuk semua kategori)
+`id, judul, slug (unique), kategori (VARCHAR slug → artikel_kategori.slug), konten, status (enum: draft|terbit), tanggal_terbit, view_count, created_at, updated_at, deleted_at`
 - Wajib paginasi per kategori.
 - Halaman publik hanya menampilkan baris `status = terbit`.
 - URL detail: `/katekese/{kategori}/{slug}` — segment `kategori` **harus cocok** dengan kolom `kategori` di DB (validasi di `ArtikelService::findPublishedByKategoriAndSlug`).
 
-### 4.8 `dokumen` (Dokumen & Materi Unduhan)
-`id, nama, file_path, kategori, created_at, updated_at, deleted_at`
+### 4.9 `dokumen_kategori` (Unduhan — kategori dinamis)
+`id, slug (unique), label, urutan, is_active, created_at, updated_at, deleted_at`
+- Admin CRUD: `/admin/unduhan-kategori` (menu sidebar **Kategori Unduhan**).
+- Kategori awal (seed): `formulir`, `warta_paroki`, `majalah`, `dokumen` — bisa ditambah/dinonaktifkan tanpa ubah kode.
+- Hapus diblokir jika masih ada baris `dokumen` dengan slug kategori tersebut; nonaktifkan (`is_active = 0`) sebagai alternatif.
+- Kategori nonaktif tidak tampil di situs publik `/unduhan` dan tidak bisa dipilih untuk unduhan baru.
+
+### 4.10 `dokumen` (Dokumen & Materi Unduhan)
+`id, nama, file_path, kategori (VARCHAR slug → dokumen_kategori.slug), download_count, created_at, updated_at, deleted_at`
 - `file_path` disimpan **di luar `public/`** (§4.5) dan disajikan lewat route unduhan terkontrol —
   jangan expose path asli ke client (§6 Security: no raw resource URL).
 
-### 4.9 `jadwal_misa`
+- Admin label UI: **Unduhan** (`/admin/dokumen`); kelola kategori di **Kategori Unduhan**.
+
+### 4.11 `galeri_event` + `galeri` (Galeri per acara)
+**`galeri_event`:** `id, judul, slug (unique), urutan, view_count, created_at, updated_at, deleted_at`
+**`galeri`:** `id, galeri_event_id (FK), jenis (enum: foto|video), file_path (nullable, relatif `public/` untuk foto), youtube_url (nullable), urutan, created_at, updated_at, deleted_at`
+- Admin: `/admin/galeri` — kelola event (judul acara), lalu item foto (upload) atau video (URL YouTube saja).
+- Upload foto otomatis di-resize maks **1200×900 px** (`App\Libraries\ImageResizer`).
+- Publik: `GET /galeri` (indeks) dan `GET /galeri/{slug}` (detail event); `view_count` di-increment saat halaman detail event dibuka.
+- Menu navigasi publik: **Galeri** (`site_header`).
+
+### 4.12 `jadwal_misa`
 `id, jenis (enum: harian|mingguan|jumat_pertama|khusus), hari_label, jam, catatan (nullable), urutan, is_active`
 - Tabel referensi kecil — tidak perlu paginasi.
 
-### 4.10 `galeri`
-`id, file_path, caption (nullable), urutan, created_at`
-
-### 4.11 `hero_slide` (dulunya array JS statis `heroSlides` di prototipe — sekarang dikelola admin)
+### 4.13 `hero_slide` (dulunya array JS statis `heroSlides` di prototipe — sekarang dikelola admin)
 `id, eyebrow, judul, subjudul, cta1_label, cta1_href, cta2_label, cta2_href, gambar, urutan, is_active`
 - `judul` boleh menyimpan `\n` literal untuk 2 baris, ditampilkan dengan `white-space:pre-line`
   seperti di prototipe — jangan diubah jadi 2 kolom terpisah, cukup satu kolom teks.
+
+### 4.14 `site_setting` (singleton, `id = 1`)
+`id, logo_path (nullable, relatif `public/uploads/branding/`), created_at, updated_at`
+- Dikelola lewat `/admin/pengaturan`; logo ditampilkan di menubar publik (`site_header`).
 
 ## 5. Rute (garis besar)
 
 **Publik**
 - `GET /` — Beranda (hero + seluruh section, sesuai `paroki-landing.html`); data dari `HomeService::getLandingData()`
-- `GET /berita` — arsip berita terbit (paginasi 12/halaman); filter opsional `?kategori={kategori}` (query string)
+- `GET /berita` — arsip berita terbit (paginasi 12/halaman); filter opsional `?kategori=` dan `?tag=`
 - `GET /berita/{slug}` — detail berita terbit
 - `GET /katekese` — arsip semua artikel terbit
 - `GET /katekese/{kategori}` — arsip per kategori (`artikel_iman|renungan_harian|orang_kudus|mutiara_biblika`)
 - `GET /katekese/{kategori}/{slug}` — detail artikel terbit
+- `GET /galeri` — halaman galeri publik (indeks event)
+- `GET /galeri/{slug}` — detail event galeri (increment `view_count`)
+- `GET /unduhan` — halaman unduhan publik; filter opsional `?kategori=` (`formulir|warta_paroki|majalah|dokumen`)
 - `GET /dokumen/{id}/unduh` — download terkontrol, bukan path publik langsung
-- `POST /formulir` — simpan ke `pendaftaran`; respons HTMX partial (§4.4), bukan redirect penuh
+- `POST /formulir` — simpan ke `pendaftaran` dari section Layanan beranda; respons HTMX partial (§4.4)
 
-Controller publik: `Home`, `BeritaController`, `KatekeseController`, `FormulirController`, `DokumenController`.
+Controller publik: `Home`, `BeritaController`, `KatekeseController`, `GaleriController`, `UnduhanController`, `FormulirController`, `DokumenController`.
 Urutan route `katekese`: detail (`/{kategori}/{slug}`) didaftarkan **sebelum** arsip per kategori (`/{kategori}`).
 
 **Admin** (prefix `/admin`, di belakang Shield)
 - `/admin/wilayah`, `/admin/wilayah/{id}/lingkungan`
-- `/admin/dewan-paroki`
+- `/admin/dewan-paroki` (+ penjabat per bidang)
 - `/admin/sakramen-jenis`
 - `/admin/pendaftaran` (list tanpa WA mentah), `/admin/pendaftaran/{id}` (detail + reveal WA)
-- `/admin/berita`, `/admin/artikel`, `/admin/dokumen`, `/admin/jadwal-misa`, `/admin/galeri`,
-  `/admin/hero-slide` (CRUD masing-masing)
+- `/admin/berita`, `/admin/artikel`, `/admin/katekese-kategori`, `/admin/dokumen` (label **Unduhan**), `/admin/unduhan-kategori`, `/admin/jadwal-misa`, `/admin/galeri`,
+  `/admin/hero-slide`, `/admin/pengaturan` (logo menubar) — CRUD / pengaturan masing-masing
 
 ## 6. Frontend
 
 - Struktur View:
   - `app/Views/layouts/main.php` — layout **beranda** one-page (Alpine `landingPage()`, semua section)
-  - `app/Views/layouts/public.php` — layout **arsip & detail** (berita, katekese): header ringkas + footer
+  - `app/Views/layouts/public.php` — layout **arsip & detail** (berita, katekese, unduhan): header/footer seragam dengan beranda
   - `app/Views/layouts/admin.php` — layout admin
-  - `app/Views/partials/*` — section beranda (hero, profil, jadwal, sakramen, berita, katekese, formulir, kontak, footer)
-  - `app/Views/berita/*`, `app/Views/katekese/*` — halaman arsip/detail konten
-  - `app/Views/partials/public_footer.php`, `public_pagination.php` — shared untuk layout publik
+  - `app/Views/partials/site_header.php`, `site_nav_scripts.php` — menubar tetap (Profil, Jadwal, Layanan, Berita, Katekese, Galeri, Unduhan) + CTA WhatsApp & Bagikan
+  - `app/Views/partials/*` — section beranda (hero, profil, jadwal, layanan + pendaftaran, berita, katekese, kontak, footer)
+  - `app/Views/berita/*`, `app/Views/katekese/*`, `app/Views/galeri/*`, `app/Views/unduhan/*` — halaman arsip/detail konten
+  - `app/Views/partials/public_pagination.php` — paginasi halaman publik
 - Ganti seluruh array JS statis di prototipe (`heroSlides`, `bidangDPH`, `wilayahList`,
-  `sakramenList`, `beritaList`, `katekeseList`, `dokumenList`) dengan data dari Controller,
+  `layananList`, `layananGrup`, `beritaList`, `katekeseList`) dengan data dari Controller,
   di-passing ke View lalu ke Alpine via `json_encode($data, JSON_HEX_APOS | JSON_HEX_QUOT)`.
 - Halaman arsip/detail **tidak** memakai Alpine data landing — render server-side PHP; card/list memakai
   `BeritaService::mapForPublicCard()` / `ArtikelService::mapForPublicCard()`.
@@ -140,6 +187,7 @@ Urutan route `katekese`: detail (`/{kategori}/{slug}`) didaftarkan **sebelum** a
 Field yang **wajib** dienkripsi (§6 PII — mandatory di semua proyek di bawah `.cursorrules` ini):
 - `pendaftaran.whatsapp` → `whatsapp_cipher` + `whatsapp_hash`
 - `wilayah.ketua_kontak` dan `lingkungan.ketua_kontak` → `*_cipher` + `*_hash`
+- `dewan_paroki_penjabat.whatsapp` → `whatsapp_cipher` + `whatsapp_hash`
 
 Field yang **boleh** plaintext: semua kolom `nama`/`nama_lengkap`/`ketua_nama` (§6: "Names/PIC labels
 may remain plaintext").
@@ -179,9 +227,81 @@ Hosting **wajib** mengaktifkan `ext-sodium` — dokumentasikan ini di README dep
 4. Modul referensi kecil dulu (hero_slide, jadwal_misa, sakramen_jenis, dewan_paroki_bidang) ✅
 5. Wilayah & Lingkungan (Repository + PiiCipher untuk kontak ketua) ✅
 6. Berita, Artikel, Galeri, Dokumen — CRUD admin ✅; view publik berita/katekese + paginasi ✅;
-   unduhan dokumen ✅; galeri publik (section beranda) ✅
+   unduhan dokumen ✅; galeri publik (`/galeri`) ✅
 7. Pendaftaran (PII, enkripsi, admin reveal, status workflow) ✅
 8. Beranda (`HomeService` + partials) ✅; halaman arsip/detail berita & katekese ✅; HTMX formulir ✅
-9. Outstanding: selaraskan partial beranda dengan `paroki-landing.html` (palet/SVG); upload orchestration
-   HeroSlide/Galeri/Dokumen ke Service (sisa audit §8); build Tailwind produksi (Vite); testing menyeluruh +
+9. Outstanding: selaraskan partial beranda dengan `paroki-landing.html` (palet/SVG); build Tailwind produksi (Vite); testing menyeluruh +
    checklist §8 `.cursorrules` + persiapan deployment
+
+## 11. Catatan Insiden & Checklist (agar tidak terulang)
+
+Ringkasan bug nyata yang muncul saat pengembangan proyek ini, gejala di browser/log, dan pencegahannya.
+Gunakan sebagai checklist sebelum merge/deploy fitur admin HTMX + upload file.
+
+### 11.1 PageCache men-cache form admin HTMX + CSRF basi
+
+| | |
+| --- | --- |
+| **Gejala** | Klik **Simpan** pada form admin (mis. berita + gambar) — tidak ada reaksi, tidak ada pesan error. |
+| **Log** | `SecurityException: The action you requested is not allowed` (403), sering setelah percobaan submit pertama. |
+| **Penyebab** | Filter `pagecache` (CI4 default `$required`) meng-cache respons GET partial HTMX (`/admin/berita/new`, dll.) **beserta token CSRF di HTML**. Setelah POST apa pun, `Security.regenerate = true` mengganti token session; form cached masih token lama. |
+| **Perbaikan** | `pagecache` dipindah ke `$globals` dengan **`except: admin, admin/*, login*, auth/*, logout`**. Kosongkan `writable/cache/` setelah deploy config ini. |
+| **Checklist** | Jangan page-cache route admin/auth. Uji: buka form HTMX → submit → harus redirect/success atau validation error terlihat. |
+
+### 11.2 CSRF HTMX + multipart (upload gambar)
+
+| | |
+| --- | --- |
+| **Gejala** | Submit pertama gagal (500/403); submit berikutnya selalu 403 sampai hard refresh. |
+| **Penyebab** | (1) Meta `csrf-token` di layout admin tidak di-update setelah partial swap; header HTMX kirim token stale. (2) Setelah request gagal setelah CSRF verified, token session sudah regenerate tapi form di panel masih token lama. |
+| **Perbaikan** | `htmx:configRequest` ambil token dari **input hidden form** (`csrf_test_name`) dulu, baru fallback meta. `htmx:afterSwap` sync meta dari token di partial baru. Handler `htmx:responseError` tampilkan pesan HTTP di panel form. |
+| **Checklist** | Setiap layout dengan HTMX POST wajib sync CSRF dari form aktif, bukan hanya meta statis halaman pertama. |
+
+### 11.3 Izin folder upload `public/uploads/*` (HTTP 500)
+
+| | |
+| --- | --- |
+| **Gejala** | `Permintaan gagal (HTTP 500)` saat upload gambar berita/galeri/hero. |
+| **Log** | `ErrorException: mkdir(): Permission denied` di `BeritaService` / service upload lain (`FCPATH/uploads/...`). |
+| **Penyebab** | Folder `public/uploads/berita` (dll.) belum ada; proses web (`www-data`) tidak bisa `mkdir` karena parent `public/uploads` milik user dev (`755`, bukan grup www-data). CI4 mengubah **warning** `mkdir()` jadi exception → 500, bukan pesan bisnis. |
+| **Perbaikan** | Library `App\Libraries\PublicUploadDirectory::ensure()` (`@mkdir` + pesan jelas). Commit `.gitkeep` di `public/uploads/{berita,galeri,branding,hero}`. Set permission deploy: `chown -R deploy:www-data public/uploads && chmod -R 775 public/uploads`. |
+| **Checklist** | Setelah clone/deploy: pastikan subfolder upload ada dan **web server bisa menulis**. Jangan andalkan `mkdir` runtime di production tanpa permission yang benar. |
+
+### 11.4 Batas ukuran upload PHP vs validasi aplikasi
+
+| | |
+| --- | --- |
+| **Gejala** | Validasi lolos / gagal aneh; file tidak ter-upload tanpa pesan jelas. |
+| **Penyebab** | `upload_max_filesize` / `post_max_size` di PHP (contoh WSL: **2M**) lebih kecil dari `max_size` validasi CI4 (dulu 5120 KB). File besar tidak pernah sampai ke aplikasi. |
+| **Perbaikan** | Validasi berita/galeri diselaraskan **max 2048 KB (2M)** + teks bantuan di form admin. Naikkan `upload_max_filesize` & `post_max_size` di `php.ini` jika butuh lebih besar — **selaraskan** dengan rule `max_size`. |
+| **Checklist** | Saat menambah upload: cek `php -i | grep upload_max` di server target; rule `max_size` ≤ limit PHP. |
+
+### 11.5 Wiring Service / route tidak lengkap setelah fitur baru
+
+| | |
+| --- | --- |
+| **Gejala** | Halaman admin error 500 atau method/service tidak ditemukan setelah menambah modul (contoh: penjabat DPH). |
+| **Penyebab** | Lupa register di `Config/Services.php`, route nested di `Routes.php`, atau inject dependency baru ke constructor Service (mis. `DewanParokiBidangService` butuh `PenjabatModel` + `PiiCipher`). |
+| **Checklist** | Setiap modul baru: migration → Model/Entity → Service → **Services.php** → Controller → **Routes.php** → sidebar → smoke test URL admin + publik. Update unit test jika constructor Service berubah (contoh `HomeServiceTest` + `ArtikelKategoriService`). |
+
+### 11.6 Migration belum dijalankan di environment
+
+| | |
+| --- | --- |
+| **Gejala** | SQL error kolom/tabel tidak ada (`view_count`, `dokumen_kategori`, `galeri_event`, dll.). |
+| **Checklist** | Setelah pull: `php spark migrate`. Jangan edit migration yang sudah jalan di staging/production (§4.7 `.cursorrules`) — buat migration baru. |
+
+### 11.7 Respons error form admin hanya partial kecil
+
+| | |
+| --- | --- |
+| **Gejala** | Setelah error upload, panel form hilang — hanya kotak merah satu baris; user mengira "tidak ada yang terjadi". |
+| **Perbaikan** | `formErrorResponse()` di controller admin (contoh berita) **render ulang form lengkap** + banner error, jangan hanya `form_error.php` tanpa form. |
+| **Checklist** | Semua admin HTMX POST yang bisa gagal (upload, validasi bisnis) harus mengembalikan form + pesan, bukan fragment error saja. |
+
+### 11.8 Kategori dinamis (Katekese / Unduhan)
+
+| | |
+| --- | --- |
+| **Pola** | Tabel `*_kategori` + slug VARCHAR di tabel konten; admin CRUD kategori terpisah; hapus diblokir jika masih dipakai; nonaktifkan (`is_active = 0`) untuk sembunyikan di publik. |
+| **Checklist** | `kategoriOptions()` publik/admin hanya slug aktif; edit konten lama dengan kategori nonaktif tetap tampil di dropdown admin via `kategoriOptionsForAdmin($currentSlug)`. |
