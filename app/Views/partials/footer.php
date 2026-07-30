@@ -26,7 +26,7 @@
                     <li><a href="<?= site_url('katekese') ?>" class="hover:text-ivory transition-colors">Arsip Katekese</a></li>
                     <li><a href="<?= site_url('galeri') ?>" class="hover:text-ivory transition-colors">Galeri</a></li>
                     <li><a href="<?= site_url('unduhan') ?>" class="hover:text-ivory transition-colors">Arsip Unduhan</a></li>
-                    <li><a href="<?= site_url('login') ?>" class="hover:text-ivory transition-colors">Login Admin</a></li>
+                    <li><a href="<?= url_to('login') ?>" class="hover:text-ivory transition-colors">Login Admin</a></li>
                 </ul>
             </div>
         </div>

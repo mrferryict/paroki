@@ -31,7 +31,7 @@ Sans), dan set ikon SVG dari prototipe **dipakai ulang**, bukan didesain ulang.
 
 - Satu grup: `admin`.
 - Semua route `/admin/*` wajib login (`session` auth filter Shield) + izin grup `admin`.
-- Login: `/login`. Logout **wajib** ikuti §4.3 `.cursorrules` (exempt dari CSRF, di luar filter
+- Login: `/cp`. Logout **wajib** ikuti §4.3 `.cursorrules` (exempt dari CSRF, di luar filter
   session, idempotent — jangan sampai idle session bikin logout gagal dengan error 403).
 
 ## 4. Modul & Skema Data
@@ -245,7 +245,7 @@ Gunakan sebagai checklist sebelum merge/deploy fitur admin HTMX + upload file.
 | **Gejala** | Klik **Simpan** pada form admin (mis. berita + gambar) — tidak ada reaksi, tidak ada pesan error. |
 | **Log** | `SecurityException: The action you requested is not allowed` (403), sering setelah percobaan submit pertama. |
 | **Penyebab** | Filter `pagecache` (CI4 default `$required`) meng-cache respons GET partial HTMX (`/admin/berita/new`, dll.) **beserta token CSRF di HTML**. Setelah POST apa pun, `Security.regenerate = true` mengganti token session; form cached masih token lama. |
-| **Perbaikan** | `pagecache` dipindah ke `$globals` dengan **`except: admin, admin/*, login*, auth/*, logout`**. Kosongkan `writable/cache/` setelah deploy config ini. |
+| **Perbaikan** | `pagecache` dipindah ke `$globals` dengan **`except: admin, admin/*, cp, cp/*, auth/*, logout`**. Kosongkan `writable/cache/` setelah deploy config ini. |
 | **Checklist** | Jangan page-cache route admin/auth. Uji: buka form HTMX → submit → harus redirect/success atau validation error terlihat. |
 
 ### 11.2 CSRF HTMX + multipart (upload gambar)

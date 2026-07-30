@@ -16,7 +16,7 @@ class ProfileController extends BaseController
 {
     /**
      * Idempotent logout: clears residual session data even if already logged out,
-     * then redirects to /login without throwing.
+     * then redirects to /cp without throwing.
      */
     public function logout(): RedirectResponse
     {
@@ -26,6 +26,6 @@ class ProfileController extends BaseController
             session()->destroy();
         }
 
-        return redirect()->to('/login');
+        return redirect()->route('login');
     }
 }

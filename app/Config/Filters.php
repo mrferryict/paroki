@@ -76,11 +76,11 @@ class Filters extends BaseFilters
             // Logout must reach its action even with an idle/expired session (.cursorrules §4.3).
             'csrf' => ['except' => ['logout']],
             // Admin & auth pages embed CSRF in HTMX partials — never page-cache them.
-            'pagecache' => ['except' => ['admin', 'admin/*', 'login*', 'auth/*', 'logout']],
+            'pagecache' => ['except' => ['admin', 'admin/*', 'cp', 'cp/*', 'auth/*', 'logout']],
             // 'invalidchars',
         ],
         'after' => [
-            'pagecache' => ['except' => ['admin', 'admin/*', 'login*', 'auth/*', 'logout']],
+            'pagecache' => ['except' => ['admin', 'admin/*', 'cp', 'cp/*', 'auth/*', 'logout']],
             // 'honeypot',
             // 'secureheaders',
         ],
@@ -117,7 +117,8 @@ class Filters extends BaseFilters
     public array $filters = [
         'auth-rates' => [
             'before' => [
-                'login*',
+                'cp',
+                'cp/*',
                 'auth/*',
             ],
         ],
