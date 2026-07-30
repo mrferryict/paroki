@@ -73,13 +73,6 @@
                 Masuk
             </button>
         </form>
-
-        <?php if (setting('Auth.allowMagicLinkLogins')): ?>
-            <p class="mt-4 text-center text-sm text-stone-600">
-                Lupa kata sandi?
-                <a href="<?= url_to('magic-link') ?>" class="font-medium text-maroon hover:text-gold">Gunakan magic link</a>
-            </p>
-        <?php endif ?>
     </div>
 
     <p class="mt-6 text-center text-sm text-stone-500">

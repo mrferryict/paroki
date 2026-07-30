@@ -27,7 +27,7 @@ $routes->post('formulir', 'FormulirController::submit', ['as' => 'formulir.submi
 // .cursorrules §4.3 / CONTEXT.md §3
 $routes->match(['GET', 'POST'], 'logout', 'ProfileController::logout');
 
-// Shield auth routes (/cp, magic-link, auth-actions). Register & logout handled above.
+// Shield auth routes (/cp, auth-actions). Register & logout handled above.
 service('auth')->routes($routes, ['except' => ['register', 'logout']]);
 
 // Admin — CONTEXT.md §3: session auth + grup admin
