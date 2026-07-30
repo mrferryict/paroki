@@ -1,8 +1,13 @@
+<?php
+$branding = service('siteSettingService')->getBranding();
+$siteName = $branding['siteName'];
+$copyrightText = $branding['copyrightText'];
+?>
 <footer class="border-t border-gold/20 bg-stone-900 py-12 text-stone-400">
     <div class="mx-auto max-w-6xl px-4 sm:px-6">
         <div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             <div class="sm:col-span-2">
-                <p class="font-display text-2xl font-semibold text-ivory">Paroki Hati Kudus Yesus</p>
+                <p class="font-display text-2xl font-semibold text-ivory"><?= esc($siteName) ?></p>
                 <p class="mt-3 max-w-md text-sm leading-relaxed">
                     Persekutuan umat beriman yang bertumbuh dalam doa, pelayanan, dan kebersamaan.
                 </p>
@@ -31,7 +36,7 @@
             </div>
         </div>
         <div class="mt-10 border-t border-stone-800 pt-8 text-center text-xs">
-            <p>&copy; <?= esc(date('Y')) ?> Paroki Hati Kudus Yesus. Semua hak dilindungi.</p>
+            <p>&copy; <?= esc(date('Y')) ?> <?= esc($siteName) ?>. <?= esc($copyrightText) ?></p>
         </div>
     </div>
 </footer>

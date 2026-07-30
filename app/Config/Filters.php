@@ -109,7 +109,7 @@ class Filters extends BaseFilters
      * 'isLoggedIn' => ['before' => ['account/*', 'profiles/*']]
      *
      * Shield registers session/tokens/group/permission aliases via its Registrar.
-     * Protect /admin/* with session + group:admin when admin routes are added
+     * Protect /admin/* with session + group:superadmin,editor; pengaturan uses permission:admin.settings
      * (CONTEXT.md §3 / §5) — not as a global filter (public pages stay open).
      *
      * @var array<string, array<string, list<string>>>

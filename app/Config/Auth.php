@@ -78,7 +78,7 @@ class Auth extends ShieldAuth
         'login'             => '/admin/hero-slide',
         'logout'            => 'login',
         'force_reset'       => '/',
-        'permission_denied' => '/cp',
+        'permission_denied' => '/admin/hero-slide',
         'group_denied'      => '/cp',
     ];
 

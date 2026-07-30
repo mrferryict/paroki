@@ -4,7 +4,7 @@
 <div class="mx-auto max-w-2xl space-y-6">
     <div>
         <h1 class="font-display text-3xl font-semibold text-maroon">Pengaturan Situs</h1>
-        <p class="mt-1 text-sm text-stone-600">Kelola logo paroki yang tampil di menubar situs publik.</p>
+        <p class="mt-1 text-sm text-stone-600">Kelola identitas paroki yang tampil di situs publik. Hanya super admin.</p>
     </div>
 
     <?php if ($message = session()->getFlashdata('success')): ?>
@@ -24,6 +24,39 @@
             </ul>
         </div>
     <?php endif ?>
+
+    <section class="rounded-lg border border-gold/20 bg-white p-6 shadow-sm">
+        <h2 class="font-display text-xl font-semibold text-maroon">Informasi Paroki</h2>
+        <p class="mt-2 text-sm text-stone-600">Nama paroki dan teks copyright di footer situs publik.</p>
+
+        <form action="<?= site_url('admin/pengaturan/situs') ?>" method="post" class="mt-6 space-y-4">
+            <?= csrf_field() ?>
+            <div>
+                <label for="site_name" class="mb-1 block text-sm font-medium">Nama Paroki</label>
+                <input type="text"
+                       name="site_name"
+                       id="site_name"
+                       required
+                       maxlength="255"
+                       value="<?= esc(old('site_name', $siteName), 'attr') ?>"
+                       class="w-full rounded-lg border border-stone-300 px-3 py-2.5 text-sm focus:border-maroon focus:outline-none focus:ring-1 focus:ring-maroon">
+            </div>
+            <div>
+                <label for="copyright_text" class="mb-1 block text-sm font-medium">Teks Copyright (footer)</label>
+                <input type="text"
+                       name="copyright_text"
+                       id="copyright_text"
+                       required
+                       maxlength="500"
+                       value="<?= esc(old('copyright_text', $copyrightText), 'attr') ?>"
+                       class="w-full rounded-lg border border-stone-300 px-3 py-2.5 text-sm focus:border-maroon focus:outline-none focus:ring-1 focus:ring-maroon">
+                <p class="mt-1 text-xs text-stone-500">Ditampilkan sebagai: © <?= esc(date('Y')) ?> [Nama Paroki]. [Teks ini].</p>
+            </div>
+            <button type="submit" class="rounded bg-maroon px-4 py-2 text-sm font-medium text-ivory hover:bg-maroon/90">
+                Simpan Informasi
+            </button>
+        </form>
+    </section>
 
     <section class="rounded-lg border border-gold/20 bg-white p-6 shadow-sm">
         <h2 class="font-display text-xl font-semibold text-maroon">Logo Paroki</h2>

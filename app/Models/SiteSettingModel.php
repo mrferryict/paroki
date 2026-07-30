@@ -19,5 +19,7 @@ class SiteSettingModel extends Model
 
     protected $allowedFields = [
         'logo_path',
+        'site_name',
+        'copyright_text',
     ];
 }

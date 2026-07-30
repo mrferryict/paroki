@@ -27,13 +27,37 @@ class PengaturanController extends BaseController
     public function index(): string
     {
         $setting = $this->siteSettingService->get();
-        $logoUrl = $this->siteSettingService->getBranding()['logoUrl'];
+        $branding = $this->siteSettingService->getBranding();
 
         return view('admin/pengaturan/index', [
-            'title'   => 'Pengaturan Situs',
-            'setting' => $setting,
-            'logoUrl' => $logoUrl,
+            'title'         => 'Pengaturan Situs',
+            'setting'       => $setting,
+            'logoUrl'       => $branding['logoUrl'],
+            'siteName'      => $branding['siteName'],
+            'copyrightText' => $branding['copyrightText'],
         ]);
+    }
+
+    public function updateSiteInfo(): RedirectResponse
+    {
+        if (! $this->validate([
+            'site_name'      => 'required|max_length[255]',
+            'copyright_text' => 'required|max_length[500]',
+        ])) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        try {
+            $this->siteSettingService->updateSiteInfo(
+                siteName: (string) $this->request->getPost('site_name'),
+                copyrightText: (string) $this->request->getPost('copyright_text'),
+            );
+
+            return redirect()->to(site_url('admin/pengaturan'))
+                ->with('success', 'Informasi situs berhasil diperbarui.');
+        } catch (InvalidArgumentException | RuntimeException $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
     }
 
     public function updateLogo(): RedirectResponse

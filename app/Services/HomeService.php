@@ -26,6 +26,7 @@ class HomeService
         private readonly BeritaService $beritaService,
         private readonly ArtikelService $artikelService,
         private readonly ArtikelKategoriService $artikelKategoriService,
+        private readonly SiteSettingService $siteSettingService,
     ) {}
 
     /**
@@ -35,8 +36,10 @@ class HomeService
     {
         $jadwalList = $this->jadwalMisaService->findAllActiveOrdered();
 
+        $branding = $this->siteSettingService->getBranding();
+
         return [
-            'title'              => 'Paroki Hati Kudus Yesus',
+            'title'              => $branding['siteName'],
             'heroSlides'         => $this->mapHeroSlides($this->heroSlideService->findAllActiveOrdered()),
             'bidangDPH'          => $this->dewanParokiBidangService->findAllForPublicWithPenjabat(),
             'wilayahList'        => $this->mapWilayahList($this->wilayahService->findAllWithLingkunganForPublic()),

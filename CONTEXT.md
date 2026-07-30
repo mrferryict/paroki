@@ -23,14 +23,15 @@ Sans), dan set ikon SVG dari prototipe **dipakai ulang**, bukan didesain ulang.
   scoping yang tidak dipakai.
 - **§5.5 Domain Events belum diperlukan.** Skala proyek masih kecil (satu paroki, bukan multi-modul
   lintas layanan). Jangan bangun event bus di fase awal.
-- **Peran (role) dimulai dari satu grup saja**: `admin` (akses penuh ke seluruh panel admin). Jangan
-  bangun sistem role granular (mis. `komsos`, `sekretariat`) sebelum benar-benar dibutuhkan — sesuai
-  §1.1 "jangan build untuk kebutuhan hipotetis".
+- **Dua grup admin**: `superadmin` (owner, akses penuh termasuk pengaturan situs) dan `editor`
+  (konten saja — tanpa `/admin/pengaturan`). Grup default user baru: `superadmin`. Detail akun demo:
+  `USERS_DEMO.md`.
 
 ## 3. Otentikasi (Shield)
 
-- Satu grup: `admin`.
-- Semua route `/admin/*` wajib login (`session` auth filter Shield) + izin grup `admin`.
+- Grup: `superadmin` (permission `admin.*`) dan `editor` (`admin.access` saja).
+- Route `/admin/pengaturan` memakai filter `permission:admin.settings` — hanya superadmin.
+- Semua route `/admin/*` lain wajib login (`session`) + grup `superadmin` atau `editor`.
 - Login: `/cp`. Logout **wajib** ikuti §4.3 `.cursorrules` (exempt dari CSRF, di luar filter
   session, idempotent — jangan sampai idle session bikin logout gagal dengan error 403).
 
@@ -130,8 +131,9 @@ Semua tabel referensi/master pakai `$useSoftDeletes = true` kecuali dinyatakan l
   seperti di prototipe — jangan diubah jadi 2 kolom terpisah, cukup satu kolom teks.
 
 ### 4.14 `site_setting` (singleton, `id = 1`)
-`id, logo_path (nullable, relatif `public/uploads/branding/`), created_at, updated_at`
-- Dikelola lewat `/admin/pengaturan`; logo ditampilkan di menubar publik (`site_header`).
+`id, logo_path (nullable), site_name, copyright_text, created_at, updated_at`
+- Dikelola lewat `/admin/pengaturan` (**superadmin only**): logo, nama paroki, teks copyright footer.
+- Logo ditampilkan di menubar publik (`site_header`); nama & copyright di header/footer.
 
 ## 5. Rute (garis besar)
 

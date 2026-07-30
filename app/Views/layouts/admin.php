@@ -76,6 +76,26 @@
     <?= $this->renderSection('head') ?>
 </head>
 <body class="min-h-screen bg-ivory font-sans text-stone-800" x-data="{ sidebarOpen: false }" x-cloak>
+    <?php
+    if (ENVIRONMENT === 'testing') {
+        $adminBranding = [
+            'siteName'      => 'Paroki Test',
+            'logoUrl'       => null,
+            'copyrightText' => 'Test',
+        ];
+        $adminUser = null;
+        $adminGroupLabel = 'Admin';
+    } else {
+        $adminBranding = service('siteSettingService')->getBranding();
+        $adminUser = auth()->user();
+        $adminGroupLabel = 'Admin';
+        if ($adminUser !== null && $adminUser->inGroup('superadmin')) {
+            $adminGroupLabel = 'Super Admin';
+        } elseif ($adminUser !== null && $adminUser->inGroup('editor')) {
+            $adminGroupLabel = 'Editor';
+        }
+    }
+    ?>
     <header class="sticky top-0 z-40 border-b border-gold/30 bg-maroon text-ivory">
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-6">
             <div class="flex items-center gap-3">
@@ -89,12 +109,12 @@
                 </button>
                 <div>
                     <p class="font-display text-xl font-semibold sm:text-2xl">Panel Admin Paroki</p>
-                    <p class="text-xs text-ivory/80 sm:text-sm">Paroki Hati Kudus Yesus</p>
+                    <p class="text-xs text-ivory/80 sm:text-sm"><?= esc($adminBranding['siteName']) ?></p>
                 </div>
             </div>
             <div class="flex items-center gap-3 text-sm">
-                <?php if (ENVIRONMENT !== 'testing' && auth()->loggedIn()): ?>
-                    <span class="hidden text-ivory/80 sm:inline"><?= esc(auth()->user()->username ?? auth()->user()->email ?? 'Admin') ?></span>
+                <?php if (ENVIRONMENT !== 'testing' && $adminUser !== null): ?>
+                    <span class="hidden text-ivory/80 sm:inline"><?= esc($adminUser->username ?? $adminUser->email ?? 'Admin') ?> · <?= esc($adminGroupLabel) ?></span>
                 <?php endif ?>
                 <a href="<?= site_url('/') ?>" class="rounded px-2 py-1 hover:bg-gold/10 hover:text-gold">Lihat Situs</a>
                 <a href="<?= site_url('logout') ?>" class="rounded bg-gold/20 px-3 py-1.5 hover:bg-gold/30">Keluar</a>

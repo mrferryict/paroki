@@ -15,6 +15,7 @@ use App\Services\HeroSlideService;
 use App\Services\HomeService;
 use App\Services\JadwalMisaService;
 use App\Services\SakramenJenisService;
+use App\Services\SiteSettingService;
 use App\Services\WilayahService;
 use CodeIgniter\Test\CIUnitTestCase;
 
@@ -51,6 +52,13 @@ final class HomeServiceTest extends CIUnitTestCase
             ]),
         ]);
 
+        $siteSettingService = $this->createStub(SiteSettingService::class);
+        $siteSettingService->method('getBranding')->willReturn([
+            'logoUrl'       => null,
+            'siteName'      => 'Paroki Hati Kudus Yesus',
+            'copyrightText' => 'Semua hak dilindungi.',
+        ]);
+
         $service = new HomeService(
             $heroSlideService,
             $this->createStub(DewanParokiBidangService::class),
@@ -60,6 +68,7 @@ final class HomeServiceTest extends CIUnitTestCase
             $this->createStub(BeritaService::class),
             $this->createStub(ArtikelService::class),
             $this->createStub(ArtikelKategoriService::class),
+            $siteSettingService,
         );
 
         $data = $service->getLandingData();

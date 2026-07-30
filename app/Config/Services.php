@@ -73,6 +73,7 @@ class Services extends BaseService
             static::beritaService(false),
             static::artikelService(false),
             static::artikelKategoriService(false),
+            static::siteSettingService(false),
         );
     }
 

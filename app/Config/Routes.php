@@ -30,8 +30,8 @@ $routes->match(['GET', 'POST'], 'logout', 'ProfileController::logout');
 // Shield auth routes (/cp, auth-actions). Register & logout handled above.
 service('auth')->routes($routes, ['except' => ['register', 'logout']]);
 
-// Admin — CONTEXT.md §3: session auth + grup admin
-$routes->group('admin', ['filter' => ['session', 'group:admin']], static function (RouteCollection $routes): void {
+// Admin — session auth + grup superadmin atau editor
+$routes->group('admin', ['filter' => ['session', 'group:superadmin,editor']], static function (RouteCollection $routes): void {
     $routes->get('/', static fn () => redirect()->to('/admin/hero-slide'));
 
     $routes->get('hero-slide', 'Admin\HeroSlideController::index', ['as' => 'admin.hero-slide.index']);
@@ -43,9 +43,10 @@ $routes->group('admin', ['filter' => ['session', 'group:admin']], static functio
     $routes->post('hero-slide/(:num)/move-up', 'Admin\HeroSlideController::moveUp/$1', ['as' => 'admin.hero-slide.move-up']);
     $routes->post('hero-slide/(:num)/move-down', 'Admin\HeroSlideController::moveDown/$1', ['as' => 'admin.hero-slide.move-down']);
 
-    $routes->get('pengaturan', 'Admin\PengaturanController::index', ['as' => 'admin.pengaturan.index']);
-    $routes->post('pengaturan/logo', 'Admin\PengaturanController::updateLogo', ['as' => 'admin.pengaturan.logo']);
-    $routes->post('pengaturan/logo/hapus', 'Admin\PengaturanController::removeLogo', ['as' => 'admin.pengaturan.logo.remove']);
+    $routes->get('pengaturan', 'Admin\PengaturanController::index', ['as' => 'admin.pengaturan.index', 'filter' => 'permission:admin.settings']);
+    $routes->post('pengaturan/situs', 'Admin\PengaturanController::updateSiteInfo', ['as' => 'admin.pengaturan.situs', 'filter' => 'permission:admin.settings']);
+    $routes->post('pengaturan/logo', 'Admin\PengaturanController::updateLogo', ['as' => 'admin.pengaturan.logo', 'filter' => 'permission:admin.settings']);
+    $routes->post('pengaturan/logo/hapus', 'Admin\PengaturanController::removeLogo', ['as' => 'admin.pengaturan.logo.remove', 'filter' => 'permission:admin.settings']);
 
     $routes->get('dewan-paroki', 'Admin\DewanParokiBidangController::index', ['as' => 'admin.dewan-paroki.index']);
     $routes->get('dewan-paroki/new', 'Admin\DewanParokiBidangController::new', ['as' => 'admin.dewan-paroki.new']);

@@ -3,9 +3,10 @@
 <?= $this->section('title') ?>Login Admin<?= $this->endSection() ?>
 
 <?= $this->section('main') ?>
+<?php $loginSiteName = service('siteSettingService')->getBranding()['siteName']; ?>
 <div class="w-full max-w-md">
     <div class="mb-8 text-center">
-        <p class="font-display text-3xl font-semibold text-maroon">Paroki Hati Kudus Yesus</p>
+        <p class="font-display text-3xl font-semibold text-maroon"><?= esc($loginSiteName) ?></p>
         <p class="mt-2 text-sm text-stone-600">Masuk ke panel admin</p>
     </div>
 

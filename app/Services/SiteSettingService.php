@@ -13,6 +13,10 @@ use RuntimeException;
 
 class SiteSettingService
 {
+    public const DEFAULT_SITE_NAME = 'Paroki Hati Kudus Yesus';
+
+    public const DEFAULT_COPYRIGHT_TEXT = 'Semua hak dilindungi.';
+
     private const SETTING_ID = 1;
 
     private const UPLOAD_SUBDIR = 'uploads/branding';
@@ -40,16 +44,50 @@ class SiteSettingService
     }
 
     /**
-     * @return array{logoUrl: ?string, siteName: string}
+     * @return array{logoUrl: ?string, siteName: string, copyrightText: string}
      */
     public function getBranding(): array
     {
         $setting = $this->get();
 
+        $siteName = trim((string) ($setting->site_name ?? ''));
+
+        if ($siteName === '') {
+            $siteName = self::DEFAULT_SITE_NAME;
+        }
+
+        $copyrightText = trim((string) ($setting->copyright_text ?? ''));
+
+        if ($copyrightText === '') {
+            $copyrightText = self::DEFAULT_COPYRIGHT_TEXT;
+        }
+
         return [
-            'logoUrl'  => $this->resolvePublicLogoUrl((string) ($setting->logo_path ?? '')),
-            'siteName' => 'Paroki Hati Kudus Yesus',
+            'logoUrl'       => $this->resolvePublicLogoUrl((string) ($setting->logo_path ?? '')),
+            'siteName'      => $siteName,
+            'copyrightText' => $copyrightText,
         ];
+    }
+
+    public function updateSiteInfo(string $siteName, string $copyrightText): void
+    {
+        $siteName = trim($siteName);
+        $copyrightText = trim($copyrightText);
+
+        if ($siteName === '') {
+            throw new InvalidArgumentException('Nama paroki wajib diisi.');
+        }
+
+        if ($copyrightText === '') {
+            throw new InvalidArgumentException('Teks copyright wajib diisi.');
+        }
+
+        if (! $this->siteSettingModel->update(self::SETTING_ID, [
+            'site_name'      => $siteName,
+            'copyright_text' => $copyrightText,
+        ])) {
+            throw new RuntimeException('Gagal menyimpan pengaturan situs.');
+        }
     }
 
     public function updateLogo(UploadedFile $file): void
