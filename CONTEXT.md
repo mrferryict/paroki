@@ -1,6 +1,6 @@
 # CONTEXT.md — Situs Profil Paroki (Paroki Hati Kudus Yesus)
 
-> File ini adalah CONTEXT.md sesuai §0 `.cursorrules` v5.2. Berisi hal-hal *spesifik proyek ini* —
+> File ini adalah CONTEXT.md sesuai §0 `.cursorrules` v4.6. Berisi hal-hal *spesifik proyek ini* —
 > skema, modul, keputusan struktur. Untuk aturan cara menulis kode (arsitektur, layering, keamanan),
 > rujuk `.cursorrules` di root yang sama.
 
@@ -13,8 +13,8 @@ Website profil paroki Katolik. Ada dua sisi:
 
 Referensi tampilan & interaksi front-end: `paroki-landing.html` (prototipe statis HTML5 + Tailwind +
 Alpine.js + HTMX yang sudah dibuat). Proyek ini **mengonversi** prototipe tersebut menjadi aplikasi
-CodeIgniter 4 dengan data dinamis dari database — palet warna, tipografi (Cormorant Garamond + Work
-Sans), dan set ikon SVG dari prototipe **dipakai ulang**, bukan didesain ulang.
+CodeIgniter 4 dengan data dinamis dari database — palet warna, tipografi (Playfair Display +
+Outfit), dan set ikon SVG dari prototipe **dipakai ulang**, bukan didesain ulang.
 
 ## 2. Pengecualian / Non-Goals dari `.cursorrules`
 
@@ -26,6 +26,12 @@ Sans), dan set ikon SVG dari prototipe **dipakai ulang**, bukan didesain ulang.
 - **Dua grup admin**: `superadmin` (owner, akses penuh termasuk pengaturan situs) dan `editor`
   (konten saja — tanpa `/admin/pengaturan`). Grup default user baru: `superadmin`. Detail akun demo:
   `USERS_DEMO.md`.
+- **PHP 8.5+** (WSL & shared hosting). Baseline proyek ini sudah naik dari 8.4 — lihat checklist
+  extension & `phpenmod mysqli` di §6 PII / hosting di bawah.
+- **Shield login memakai email plaintext** di `auth_identities.secret` (bawaan Shield). PII terenkripsi
+  hanya di tabel aplikasi (`pendaftaran`, `wilayah`, `lingkungan`, `dewan_paroki_penjabat`) — **bukan**
+  di akun admin Shield. §4.4 `.cursorrules` (email_hash login + larangan `shield:user`) **tidak**
+  berlaku di proyek ini; bootstrap demo: `php spark db:seed DemoUsersSeeder` / `shield:user` OK.
 
 ## 3. Otentikasi (Shield)
 
@@ -194,8 +200,30 @@ Field yang **wajib** dienkripsi (§6 PII — mandatory di semua proyek di bawah 
 Field yang **boleh** plaintext: semua kolom `nama`/`nama_lengkap`/`ketua_nama` (§6: "Names/PIC labels
 may remain plaintext").
 
-Hosting **wajib** mengaktifkan `ext-sodium` — dokumentasikan ini di README deployment. Kunci enkripsi
-(`pii.key`) disimpan di `.env`, tidak pernah di kode.
+Hosting **wajib** mengaktifkan ekstensi PHP berikut (per versi PHP aktif — setelah upgrade 8.4→8.5,
+pasang ulang paket `php8.5-*`, bukan hanya `php8.4-*`):
+
+| Extension | Alasan |
+|-----------|--------|
+| `ext-mysqli` | Koneksi MySQL/MariaDB (CI4 `DBDriver = MySQLi`) |
+| `ext-intl` | CodeIgniter 4 |
+| `ext-mbstring` | CodeIgniter 4 |
+| `ext-sodium` | Enkripsi PII (UU PDP) |
+
+Verifikasi: `php -m | grep -E 'mysqli|intl|mbstring|sodium'`.
+
+**Ubuntu/Debian (Sury PPA):** paket `php8.5-mysql` sudah memuat `mysqli.so`, tapi sering belum
+**di-enable** setelah upgrade. Jika `php -m` tidak menampilkan `mysqli` meski paket terpasang:
+
+```bash
+sudo phpenmod -v 8.5 -s ALL mysqli pdo_mysql
+sudo systemctl restart php8.5-fpm
+```
+
+Gejala `ext-mysqli` belum aktif: **`Undefined constant "CodeIgniter\Database\MySQLi\MYSQLI_STORE_RESULT"`**
+saat membuka situs — bukan bug aplikasi; konstanta MySQLi tidak ada karena modul belum dimuat.
+
+Kunci enkripsi (`pii.key`) disimpan di `.env`, tidak pernah di kode.
 
 **Konfigurasi `pii.key` (wajib di setiap environment):**
 - Generate: `php -r "echo sodium_bin2base64(random_bytes(32), SODIUM_BASE64_VARIANT_ORIGINAL);"`

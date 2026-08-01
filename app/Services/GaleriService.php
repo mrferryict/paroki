@@ -17,6 +17,8 @@ use CodeIgniter\HTTP\Files\UploadedFile;
 use DomainException;
 use InvalidArgumentException;
 use RuntimeException;
+use Uri\InvalidUriException;
+use Uri\Rfc3986\Uri;
 
 class GaleriService
 {
@@ -398,11 +400,43 @@ class GaleriService
             return null;
         }
 
-        if (preg_match('~(?:youtube\.com/watch\?.*v=|youtube\.com/embed/|youtu\.be/)([A-Za-z0-9_-]{11})~', $url, $matches) === 1) {
+        try {
+            $uri = new Uri($url);
+        } catch (InvalidUriException) {
+            return null;
+        }
+
+        $host = strtolower($uri->getHost() ?? '');
+
+        if ($host === 'youtu.be') {
+            $videoId = trim($uri->getPath(), '/');
+
+            return $this->isValidYouTubeVideoId($videoId) ? $videoId : null;
+        }
+
+        if (! str_ends_with($host, 'youtube.com') && ! str_ends_with($host, 'youtube-nocookie.com')) {
+            return null;
+        }
+
+        $path = $uri->getPath() ?? '';
+
+        if (preg_match('#^/embed/([A-Za-z0-9_-]{11})$#', $path, $matches) === 1) {
             return $matches[1];
         }
 
+        if ($path === '/watch' || $path === '/watch/') {
+            parse_str($uri->getQuery() ?? '', $query);
+            $videoId = (string) ($query['v'] ?? '');
+
+            return $this->isValidYouTubeVideoId($videoId) ? $videoId : null;
+        }
+
         return null;
+    }
+
+    private function isValidYouTubeVideoId(string $videoId): bool
+    {
+        return preg_match('/^[A-Za-z0-9_-]{11}$/', $videoId) === 1;
     }
 
     private function resolvePreviewUrl(Galeri $item): ?string
