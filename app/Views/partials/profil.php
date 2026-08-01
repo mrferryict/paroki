@@ -17,9 +17,9 @@
             </div>
             <div>
                 <span class="inline-block h-1 w-12 bg-gold"></span>
-                <h2 class="mt-4 font-display text-3xl font-semibold text-maroon lg:text-4xl">Profil Paroki Hati Kudus Yesus</h2>
+                <h2 class="mt-4 font-display text-3xl font-semibold text-maroon lg:text-4xl">Profil Paroki Santo Mikael Gombong</h2>
                 <div class="mt-5 space-y-4 text-[17px] leading-relaxed text-stone-600">
-                    <p>Paroki Hati Kudus Yesus adalah persekutuan umat beriman yang bertumbuh dalam doa, pelayanan, dan kebersamaan. Kami mengundang setiap orang untuk merasakan rumah rohani yang hangat dan terbuka.</p>
+                    <p>Paroki Santo Mikael Gombong adalah persekutuan umat beriman yang bertumbuh dalam doa, pelayanan, dan kebersamaan. Kami mengundang setiap orang untuk merasakan rumah rohani yang hangat dan terbuka.</p>
                     <p>Melalui Dewan Paroki Hati (DPH) dan struktur wilayah–lingkungan, umat dilibatkan aktif dalam liturgi, diakonia, koinonia, dan kerygma.</p>
                 </div>
             </div>

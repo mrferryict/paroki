@@ -55,7 +55,7 @@ final class HomeServiceTest extends CIUnitTestCase
         $siteSettingService = $this->createStub(SiteSettingService::class);
         $siteSettingService->method('getBranding')->willReturn([
             'logoUrl'       => null,
-            'siteName'      => 'Paroki Hati Kudus Yesus',
+            'siteName'      => 'Paroki Santo Mikael Gombong',
             'copyrightText' => 'Semua hak dilindungi.',
         ]);
 

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="<?= esc($metaDescription ?? ($title ?? 'Paroki Hati Kudus Yesus')) ?>">
-    <title><?= esc($title ?? 'Paroki Hati Kudus Yesus') ?> — Paroki Hati Kudus Yesus</title>
+    <meta name="description" content="<?= esc($metaDescription ?? ($title ?? 'Paroki Santo Mikael Gombong')) ?>">
+    <title><?= esc($title ?? 'Paroki Santo Mikael Gombong') ?> — Paroki Santo Mikael Gombong</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -37,7 +37,7 @@
     <?= view('partials/site_header', [
         'isHome'     => false,
         'shareUrl'   => $shareUrl ?? current_url(),
-        'shareTitle' => $shareTitle ?? ($title ?? 'Paroki Hati Kudus Yesus'),
+        'shareTitle' => $shareTitle ?? ($title ?? 'Paroki Santo Mikael Gombong'),
     ]) ?>
 
     <main class="min-h-[60vh] pt-[4.75rem]">
@@ -47,7 +47,7 @@
     <?= view('partials/footer') ?>
     <?= view('partials/site_nav_scripts', [
         'shareUrl'   => $shareUrl ?? current_url(),
-        'shareTitle' => $shareTitle ?? ($title ?? 'Paroki Hati Kudus Yesus'),
+        'shareTitle' => $shareTitle ?? ($title ?? 'Paroki Santo Mikael Gombong'),
     ]) ?>
 </body>
 </html>

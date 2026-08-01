@@ -4,7 +4,7 @@
 /** @var string $shareTitle */
 $isHome     = $isHome ?? false;
 $shareUrl   = $shareUrl ?? current_url();
-$shareTitle = $shareTitle ?? 'Paroki Hati Kudus Yesus';
+$shareTitle = $shareTitle ?? 'Paroki Santo Mikael Gombong';
 $paroki     = config('Paroki');
 $branding   = service('siteSettingService')->getBranding();
 $logoUrl    = $branding['logoUrl'] ?? null;

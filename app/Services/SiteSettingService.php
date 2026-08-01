@@ -13,7 +13,7 @@ use RuntimeException;
 
 class SiteSettingService
 {
-    public const DEFAULT_SITE_NAME = 'Paroki Hati Kudus Yesus';
+    public const DEFAULT_SITE_NAME = 'Paroki Santo Mikael Gombong';
 
     public const DEFAULT_COPYRIGHT_TEXT = 'Semua hak dilindungi.';
 

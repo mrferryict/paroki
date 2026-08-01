@@ -1,4 +1,4 @@
-# CONTEXT.md — Situs Profil Paroki (Paroki Hati Kudus Yesus)
+# CONTEXT.md — Situs Profil Paroki (Paroki Santo Mikael Gombong)
 
 > File ini adalah CONTEXT.md sesuai §0 `.cursorrules` v4.6. Berisi hal-hal *spesifik proyek ini* —
 > skema, modul, keputusan struktur. Untuk aturan cara menulis kode (arsitektur, layering, keamanan),

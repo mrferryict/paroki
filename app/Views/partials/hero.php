@@ -69,7 +69,7 @@
         <div class="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-maroon px-4">
             <div class="max-w-xl text-center text-ivory">
                 <p class="text-sm uppercase tracking-[0.2em] text-gold">Selamat Datang</p>
-                <h1 class="mt-4 font-display text-4xl font-semibold sm:text-5xl">Paroki Hati Kudus Yesus</h1>
+                <h1 class="mt-4 font-display text-4xl font-semibold sm:text-5xl">Paroki Santo Mikael Gombong</h1>
                 <p class="mt-4 text-ivory/80">Persekutuan umat beriman yang bertumbuh dalam doa, pelayanan, dan kebersamaan.</p>
             </div>
         </div>

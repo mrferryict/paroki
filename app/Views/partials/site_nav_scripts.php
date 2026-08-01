@@ -3,7 +3,7 @@
         return {
             navOpen: false,
             shareUrl: <?= json_encode($shareUrl ?? current_url(), JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
-            shareTitle: <?= json_encode($shareTitle ?? 'Paroki Hati Kudus Yesus', JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+            shareTitle: <?= json_encode($shareTitle ?? 'Paroki Santo Mikael Gombong', JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
 
             async sharePage() {
                 const payload = { title: this.shareTitle, url: this.shareUrl };
