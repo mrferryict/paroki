@@ -4,28 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($title ?? 'Admin') ?> — Paroki</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        maroon: '#722F37',
-                        gold: '#C5A572',
-                        ivory: '#FAF7F2',
-                    },
-                    fontFamily: {
-                        display: ['"Playfair Display"', 'serif'],
-                        sans: ['"Outfit"', 'sans-serif'],
-                    },
-                },
-            },
-        };
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <?= view('partials/site_head') ?>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <meta name="csrf-token" content="<?= csrf_hash() ?>">
     <meta name="csrf-field" content="<?= esc(config('Security')->tokenName) ?>">
@@ -72,7 +52,6 @@
             target.prepend(notice);
         });
     </script>
-    <style>[x-cloak] { display: none !important; }</style>
     <?= $this->renderSection('head') ?>
 </head>
 <body class="min-h-screen bg-ivory font-sans text-stone-800" x-data="{ sidebarOpen: false }" x-cloak>

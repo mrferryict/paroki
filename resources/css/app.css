@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@source "../../app/Views/**/*.php";
+
+@theme {
+    --color-maroon: #722f37;
+    --color-gold: #c5a572;
+    --color-ivory: #faf7f2;
+    --font-display: "Playfair Display", serif;
+    --font-sans: "Outfit", sans-serif;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+.hero-slide-enter {
+    animation: heroFade 0.8s ease-out;
+}
+
+@keyframes heroFade {
+    from {
+        opacity: 0;
+        transform: scale(1.03);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
