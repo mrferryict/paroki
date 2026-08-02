@@ -1,5 +1,17 @@
+<?php
+$heroSlides = $heroSlides ?? [];
+$siteName   = $title ?? 'Paroki Santo Mikael Gombong';
+?>
 <section id="hero" class="relative min-h-[100dvh] overflow-hidden pt-16">
-    <template x-if="heroSlides.length > 0">
+    <?php if ($heroSlides === []): ?>
+        <div class="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-maroon px-4">
+            <div class="max-w-xl text-center text-ivory">
+                <p class="text-sm uppercase tracking-[0.2em] text-gold">Selamat Datang</p>
+                <h1 class="mt-4 font-display text-4xl font-semibold sm:text-5xl"><?= esc($siteName) ?></h1>
+                <p class="mt-4 text-ivory/80">Persekutuan umat beriman yang bertumbuh dalam doa, pelayanan, dan kebersamaan.</p>
+            </div>
+        </div>
+    <?php else: ?>
         <div class="relative min-h-[calc(100dvh-4rem)]">
             <template x-for="(slide, index) in heroSlides" :key="index">
                 <div x-show="currentSlide === index"
@@ -63,15 +75,5 @@
                 </div>
             </template>
         </div>
-    </template>
-
-    <template x-if="heroSlides.length === 0">
-        <div class="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-maroon px-4">
-            <div class="max-w-xl text-center text-ivory">
-                <p class="text-sm uppercase tracking-[0.2em] text-gold">Selamat Datang</p>
-                <h1 class="mt-4 font-display text-4xl font-semibold sm:text-5xl">Paroki Santo Mikael Gombong</h1>
-                <p class="mt-4 text-ivory/80">Persekutuan umat beriman yang bertumbuh dalam doa, pelayanan, dan kebersamaan.</p>
-            </div>
-        </div>
-    </template>
+    <?php endif ?>
 </section>

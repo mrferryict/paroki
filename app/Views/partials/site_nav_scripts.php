@@ -4,14 +4,28 @@
             navOpen: false,
             shareUrl: <?= json_encode($shareUrl ?? current_url(), JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
             shareTitle: <?= json_encode($shareTitle ?? 'Paroki Santo Mikael Gombong', JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
-            shareNotice: '',
             shareNoticeTimer: null,
 
             showShareNotice(message) {
-                this.shareNotice = message;
+                let toast = document.getElementById('share-notice-toast');
+
+                if (! toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'share-notice-toast';
+                    toast.setAttribute('role', 'status');
+                    toast.setAttribute('aria-live', 'polite');
+                    toast.hidden = true;
+                    toast.className = 'pointer-events-none fixed bottom-4 left-1/2 z-[60] max-w-sm -translate-x-1/2 rounded-lg border border-gold/30 bg-maroon px-4 py-3 text-center text-sm font-medium text-ivory shadow-lg';
+                    document.body.appendChild(toast);
+                }
+
+                toast.textContent = message;
+                toast.hidden = false;
+
                 clearTimeout(this.shareNoticeTimer);
                 this.shareNoticeTimer = setTimeout(() => {
-                    this.shareNotice = '';
+                    toast.hidden = true;
+                    toast.textContent = '';
                 }, 4000);
             },
 

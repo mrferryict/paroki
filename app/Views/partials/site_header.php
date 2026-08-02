@@ -76,10 +76,3 @@ $section    = static fn (string $id): string => $isHome ? '#' . $id : $homeUrl .
         </div>
     </div>
 </header>
-<div x-show="shareNotice"
-     x-transition.opacity
-     x-cloak
-     role="status"
-     aria-live="polite"
-     class="pointer-events-none fixed bottom-4 left-1/2 z-[60] max-w-sm -translate-x-1/2 rounded-lg border border-gold/30 bg-maroon px-4 py-3 text-center text-sm font-medium text-ivory shadow-lg"
-     x-text="shareNotice"></div>
