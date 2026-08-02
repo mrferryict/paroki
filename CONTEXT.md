@@ -319,7 +319,7 @@ Gunakan sebagai checklist sebelum merge/deploy fitur admin HTMX + upload file.
 | | |
 | --- | --- |
 | **Gejala** | SQL error kolom/tabel tidak ada (`view_count`, `dokumen_kategori`, `galeri_event`, dll.). |
-| **Checklist** | Setelah pull: `php spark migrate`. Jangan edit migration yang sudah jalan di staging/production (§4.7 `.cursorrules`) — buat migration baru. |
+| **Checklist** | Setelah pull: `php spark migrate --all` (wajib `--all` agar migration Shield/Settings ikut). Refresh DB: `php spark migrate:refresh --all` — **bukan** `migrate:refresh` tanpa `--all` (rollback semua namespace, tapi `migrate` hanya App → tabel auth hilang). Jangan edit migration yang sudah jalan di staging/production — buat migration baru. |
 
 ### 11.7 Respons error form admin hanya partial kecil
 

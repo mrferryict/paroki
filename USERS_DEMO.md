@@ -6,7 +6,7 @@ Jangan gunakan password ini di production.
 ## Cara menjalankan seeder
 
 ```bash
-php spark migrate
+php spark migrate --all
 php spark db:seed DemoUsersSeeder
 ```
 
