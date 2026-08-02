@@ -11,10 +11,10 @@ Website profil paroki Katolik. Ada dua sisi:
   katekese & renungan, formulir pendaftaran layanan (di section Layanan), halaman unduhan dokumen.
 - **Admin** (`/admin/*`, di belakang CodeIgniter Shield) — CRUD seluruh konten di atas.
 
-Referensi tampilan & interaksi front-end: `paroki-landing.html` (prototipe statis HTML5 + Tailwind +
-Alpine.js + HTMX yang sudah dibuat). Proyek ini **mengonversi** prototipe tersebut menjadi aplikasi
-CodeIgniter 4 dengan data dinamis dari database — palet warna, tipografi (Playfair Display +
-Outfit), dan set ikon SVG dari prototipe **dipakai ulang**, bukan didesain ulang.
+Referensi tampilan & interaksi front-end: partial beranda di `app/Views/partials/` (palet maroon
+`#6B1220`, tipografi Playfair Display + Outfit, ikon SVG). Proyek ini aplikasi CodeIgniter 4 dengan
+data dinamis dari database — palet, tipografi, dan set ikon SVG **dipakai ulang** di view, bukan
+didesain ulang.
 
 ## 2. Pengecualian / Non-Goals dari `.cursorrules`
 
@@ -144,7 +144,7 @@ Semua tabel referensi/master pakai `$useSoftDeletes = true` kecuali dinyatakan l
 ## 5. Rute (garis besar)
 
 **Publik**
-- `GET /` — Beranda (hero + seluruh section, sesuai `paroki-landing.html`); data dari `HomeService::getLandingData()`
+- `GET /` — Beranda (hero + seluruh section via partials); data dari `HomeService::getLandingData()`
 - `GET /berita` — arsip berita terbit (paginasi 12/halaman); filter opsional `?kategori=` dan `?tag=`
 - `GET /berita/{slug}` — detail berita terbit
 - `GET /katekese` — arsip semua artikel terbit
@@ -187,8 +187,7 @@ Urutan route `katekese`: detail (`/{kategori}/{slug}`) didaftarkan **sebelum** a
 - Form admin (CRUD) pakai partial + HTMX swap (§4.4) — bukan reload halaman penuh.
 - Tailwind: Play CDN untuk pengembangan, tapi build produksi **wajib** pindah ke Vite/PostCSS
   (§2 Frontend stack) sebelum go-live — jangan ship Play CDN ke production.
-- Palet warna admin saat ini `#722F37` (maroon); prototipe `paroki-landing.html` memakai `#6B1220` —
-  penyelarasan pixel-perfect dengan prototipe masih outstanding.
+- Palet warna admin saat ini `#722F37` (maroon); beranda publik `#6B1220` — penyelarasan admin vs publik masih outstanding.
 
 ## 7. Catatan PII Khusus Proyek Ini
 
@@ -260,7 +259,7 @@ Kunci enkripsi (`pii.key`) disimpan di `.env`, tidak pernah di kode.
    unduhan dokumen ✅; galeri publik (`/galeri`) ✅
 7. Pendaftaran (PII, enkripsi, admin reveal, status workflow) ✅
 8. Beranda (`HomeService` + partials) ✅; halaman arsip/detail berita & katekese ✅; HTMX formulir ✅
-9. Outstanding: selaraskan partial beranda dengan `paroki-landing.html` (palet/SVG); build Tailwind produksi (Vite); testing menyeluruh +
+9. Outstanding: selaraskan palet admin dengan publik (`#6B1220`); build Tailwind produksi (Vite); testing menyeluruh +
    checklist §8 `.cursorrules` + persiapan deployment
 
 ## 11. Catatan Insiden & Checklist (agar tidak terulang)
