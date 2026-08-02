@@ -6,13 +6,27 @@ use CodeIgniter\Config\BaseConfig;
 
 class App extends BaseConfig
 {
+    private const DEFAULT_BASE_URL = 'http://localhost:8080/';
+
     public function __construct()
     {
         parent::__construct();
-        if (isset($_SERVER["HTTP_HOST"])) {
-            $protocol = (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off") ? "https" : "http";
-            $this->baseURL = $protocol . "://" . $_SERVER["HTTP_HOST"] . "/";
+
+        if (! isset($_SERVER['HTTP_HOST'])) {
+            return;
         }
+
+        // Respect app.baseURL from .env — do not overwrite explicit production/subfolder URLs.
+        if ($this->baseURL !== self::DEFAULT_BASE_URL) {
+            return;
+        }
+
+        $protocol = (! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? '/index.php'));
+        $basePath   = dirname($scriptName);
+        $basePath   = ($basePath === '/' || $basePath === '.') ? '' : $basePath;
+
+        $this->baseURL = $protocol . '://' . $_SERVER['HTTP_HOST'] . $basePath . '/';
     }
 
     /**
@@ -25,7 +39,7 @@ class App extends BaseConfig
      *
      * E.g., http://example.com/
      */
-    public string $baseURL = 'http://localhost:8080/';
+    public string $baseURL = self::DEFAULT_BASE_URL;
 
     /**
      * Allowed Hostnames in the Site URL other than the hostname in the baseURL.

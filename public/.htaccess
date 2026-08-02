@@ -6,6 +6,8 @@ Options -Indexes
 <IfModule mod_rewrite.c>
 	Options +FollowSymlinks
 	RewriteEngine On
+	# Production root: RewriteBase /
+	# Subfolder staging (contoh /test/): ubah menjadi RewriteBase /test/
 	RewriteBase /
 
 	# Paksa HTTPS (production)
