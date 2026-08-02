@@ -23,7 +23,7 @@ class DemoUsersSeeder extends Seeder
         $this->seedUser(
             userModel: $userModel,
             username: 'superadmin',
-            email: 'superadmin@paroki.demo',
+            email: 'superadmin@parokistmikaelgombong.or.id',
             password: 'SuperAdmin2026!',
             group: 'superadmin',
         );
@@ -31,7 +31,7 @@ class DemoUsersSeeder extends Seeder
         $this->seedUser(
             userModel: $userModel,
             username: 'editor',
-            email: 'editor@paroki.demo',
+            email: 'editor@parokistmikaelgombong.or.id',
             password: 'Editor2026!',
             group: 'editor',
         );
