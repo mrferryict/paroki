@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "dev": "tailwindcss -i ./resources/css/app.css -o ./public/assets/css/app.css --watch",
-    "build": "tailwindcss -i ./resources/css/app.css -o ./public/assets/css/app.css --minify"
+    "build": "tailwindcss -i ./resources/css/app.css -o ./public/assets/css/app.css --minify",
+    "deploy-check": "bash scripts/deploy-check.sh"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.11",
