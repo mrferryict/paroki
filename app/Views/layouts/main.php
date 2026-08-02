@@ -65,6 +65,8 @@
         'shareTitle' => $title ?? 'Paroki Santo Mikael Gombong',
     ]) ?>
 
+    <?= view('partials/scroll_to_top') ?>
+
     <script>
         function landingPage() {
             return {
@@ -84,6 +86,8 @@
                 katekeseKategori: <?= json_encode($katekeseKategori ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
 
                 init() {
+                    this.initScrollTop();
+
                     if (this.heroSlides.length > 0) {
                         this.startSlideTimer();
                     }

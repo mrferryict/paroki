@@ -45,6 +45,7 @@
     </main>
 
     <?= view('partials/footer') ?>
+    <?= view('partials/scroll_to_top') ?>
     <?= view('partials/site_nav_scripts', [
         'shareUrl'   => $shareUrl ?? current_url(),
         'shareTitle' => $shareTitle ?? ($title ?? 'Paroki Santo Mikael Gombong'),

@@ -5,6 +5,24 @@
             shareUrl: <?= json_encode($shareUrl ?? current_url(), JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
             shareTitle: <?= json_encode($shareTitle ?? 'Paroki Santo Mikael Gombong', JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
             shareNoticeTimer: null,
+            showScrollTop: false,
+
+            init() {
+                this.initScrollTop();
+            },
+
+            initScrollTop() {
+                const update = () => {
+                    this.showScrollTop = window.scrollY > 320;
+                };
+
+                update();
+                window.addEventListener('scroll', update, { passive: true });
+            },
+
+            scrollToTop() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
 
             showShareNotice(message) {
                 let toast = document.getElementById('share-notice-toast');
