@@ -2,6 +2,14 @@
 $branding = service('siteSettingService')->getBranding();
 $siteName = $branding['siteName'];
 $copyrightText = $branding['copyrightText'];
+
+$footerMonitorMemoryMb = round(memory_get_peak_usage(true) / 1024 / 1024, 2);
+$footerMonitorLoadSeconds = number_format(
+    microtime(true) - (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true)),
+    3,
+    '.',
+    '',
+);
 ?>
 <footer class="border-t border-gold/20 bg-stone-900 py-12 text-stone-400">
     <div class="mx-auto max-w-6xl px-4 sm:px-6">
@@ -35,8 +43,17 @@ $copyrightText = $branding['copyrightText'];
                 </ul>
             </div>
         </div>
-        <div class="mt-10 border-t border-stone-800 pt-8 text-center text-xs">
-            <p>&copy; <?= esc(date('Y')) ?> <?= esc($siteName) ?>. <?= esc($copyrightText) ?></p>
+        <div class="mt-10 border-t border-stone-800 pt-8 text-xs">
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <p class="text-left text-stone-400">
+                    &copy; <?= esc(date('Y')) ?> <?= esc($siteName) ?>. <?= esc($copyrightText) ?>
+                </p>
+                <p class="text-right font-mono text-stone-500">
+                    PHP <?= esc(PHP_VERSION) ?>
+                    · <?= esc((string) $footerMonitorMemoryMb) ?> MB
+                    · Loaded in <?= esc($footerMonitorLoadSeconds) ?> s
+                </p>
+            </div>
         </div>
     </div>
 </footer>

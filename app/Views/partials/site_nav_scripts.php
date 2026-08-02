@@ -4,13 +4,63 @@
             navOpen: false,
             shareUrl: <?= json_encode($shareUrl ?? current_url(), JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
             shareTitle: <?= json_encode($shareTitle ?? 'Paroki Santo Mikael Gombong', JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+            shareNotice: '',
+            shareNoticeTimer: null,
+
+            showShareNotice(message) {
+                this.shareNotice = message;
+                clearTimeout(this.shareNoticeTimer);
+                this.shareNoticeTimer = setTimeout(() => {
+                    this.shareNotice = '';
+                }, 4000);
+            },
+
+            canUseNativeShare(payload) {
+                if (! navigator.share) {
+                    return false;
+                }
+
+                if (typeof navigator.canShare === 'function' && ! navigator.canShare(payload)) {
+                    return false;
+                }
+
+                // Native share sheet is reliable on phones/tablets; desktop often has no useful UI.
+                return window.matchMedia('(pointer: coarse)').matches;
+            },
+
+            async copyShareUrl() {
+                const url = this.shareUrl;
+
+                if (navigator.clipboard?.writeText && window.isSecureContext) {
+                    await navigator.clipboard.writeText(url);
+
+                    return true;
+                }
+
+                const textarea = document.createElement('textarea');
+                textarea.value = url;
+                textarea.setAttribute('readonly', '');
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.select();
+                const copied = document.execCommand('copy');
+                document.body.removeChild(textarea);
+
+                return copied;
+            },
 
             async sharePage() {
-                const payload = { title: this.shareTitle, url: this.shareUrl };
+                const payload = {
+                    title: this.shareTitle,
+                    text: this.shareTitle,
+                    url: this.shareUrl,
+                };
 
-                if (navigator.share) {
+                if (this.canUseNativeShare(payload)) {
                     try {
                         await navigator.share(payload);
+
                         return;
                     } catch (error) {
                         if (error?.name === 'AbortError') {
@@ -20,11 +70,16 @@
                 }
 
                 try {
-                    await navigator.clipboard.writeText(this.shareUrl);
-                    alert('Tautan halaman disalin ke clipboard.');
+                    if (await this.copyShareUrl()) {
+                        this.showShareNotice('Tautan disalin. Tempel di chat atau media sosial.');
+
+                        return;
+                    }
                 } catch {
-                    prompt('Salin tautan halaman ini:', this.shareUrl);
+                    // Fall through to manual copy hint.
                 }
+
+                this.showShareNotice('Salin tautan: ' + this.shareUrl);
             },
         };
     }
