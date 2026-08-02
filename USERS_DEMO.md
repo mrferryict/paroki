@@ -18,8 +18,8 @@ Seeder **idempotent** — aman dijalankan ulang; tidak membuat duplikat jika ema
 
 | Peran | Grup Shield | Username | Email | Password |
 |-------|-------------|----------|-------|----------|
-| **Super Admin (owner)** | `superadmin` | `superadmin` | `superadmin@paroki.demo` | `SuperAdmin2026!` |
-| **Editor konten** | `editor` | `editor` | `editor@paroki.demo` | `Editor2026!` |
+| **Super Admin (owner)** | `superadmin` | `superadmin` | `superadmin@parokistmikaelgombong.or.id` | `SuperAdmin2026!` |
+| **Editor konten** | `editor` | `editor` | `editor@parokistmikaelgombong.or.id` | `Editor2026!` |
 
 **URL login:** `/cp`
 
@@ -40,6 +40,6 @@ Editor yang membuka `/admin/pengaturan` langsung akan dialihkan ke dashboard den
 ## Reset password manual
 
 ```bash
-php spark shield:user password -e superadmin@paroki.demo
-php spark shield:user password -e editor@paroki.demo
+php spark shield:user password -e superadmin@parokistmikaelgombong.or.id
+php spark shield:user password -e editor@parokistmikaelgombong.or.id
 ```
